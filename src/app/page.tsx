@@ -408,10 +408,10 @@ export default function Dashboard() {
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button
-              onClick={() => window.location.href = '/progress'}
+              onClick={() => window.location.href = '/tasks'}
               className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white flex-1 sm:flex-none"
             >
-              📊 Analytics
+              📋 Tasks
             </Button>
           </div>
         </div>
@@ -801,6 +801,7 @@ export default function Dashboard() {
             <HabitSettings />
           </CardContent>
         </Card>
+
       </div>
       </div>
     </MainLayout>

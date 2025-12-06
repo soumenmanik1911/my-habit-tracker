@@ -40,23 +40,43 @@ const categoryColors = {
 
 export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isSwiping, setIsSwiping] = useState(false);
 
   const handleToggle = () => {
     startTransition(async () => {
-      const result = await toggleTask(task.id);
-      if (result.success) {
-        onRefresh();
+      try {
+        const result = await toggleTask(task.id);
+        if (result.success) {
+          onRefresh();
+        } else {
+          console.error('Failed to toggle task status');
+          // Could show toast notification here
+        }
+      } catch (error) {
+        console.error('Toggle error:', error);
       }
     });
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this task?')) {
+    const taskTitle = task.title.length > 30 ? task.title.substring(0, 30) + '...' : task.title;
+    if (window.confirm(`Delete "${taskTitle}"?\n\nThis action cannot be undone.`)) {
+      setIsDeleting(true);
       startTransition(async () => {
-        const result = await deleteTask(task.id);
-        if (result.success) {
-          onRefresh();
+        try {
+          const result = await deleteTask(task.id);
+          if (result.success) {
+            onRefresh();
+            // Could add toast notification here if available
+          } else {
+            alert('Failed to delete task. Please try again.');
+            setIsDeleting(false);
+          }
+        } catch (error) {
+          console.error('Delete error:', error);
+          alert('An error occurred while deleting the task.');
+          setIsDeleting(false);
         }
       });
     }
@@ -80,28 +100,30 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
   return (
     <div
       className={cn(
-        'group relative bg-gray-900/50 border border-gray-700/50 rounded-xl p-4 transition-all duration-300 hover-lift',
+        'group relative bg-gray-900/50 border border-gray-700/50 rounded-xl p-4 sm:p-5 transition-all duration-300 hover-lift',
         task.is_completed && 'opacity-60',
         isSwiping && 'transform translate-x-2'
       )}
     >
-      {/* Mobile swipe actions overlay */}
-      <div className="absolute -right-16 top-0 h-full flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity md:hidden">
+      {/* Mobile action buttons - always visible */}
+      <div className="flex md:hidden items-center space-x-20 mt-4 pt-4 border-t border-gray-700/30 ">
+        <Button
+          size="sm"
+          onClick={() => onEdit(task)}
+          className="flex-1 h-8 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg touch-manipulation"
+        >
+          <Edit size={13} className="mr-1" />
+          Edit
+        </Button>
         <Button
           size="sm"
           variant="destructive"
           onClick={handleDelete}
-          disabled={isPending}
-          className="h-8 w-8 p-0"
+          disabled={isPending || isDeleting}
+          className="flex-1 h-8 font-medium rounded-lg touch-manipulation"
         >
-          <Trash2 size={14} />
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => onEdit(task)}
-          className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700"
-        >
-          <Edit size={14} />
+          <Trash2 size={13} className="mr-1" />
+          {isDeleting ? 'Deleting...' : 'Delete'}
         </Button>
       </div>
 
@@ -111,7 +133,7 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
           size="sm"
           onClick={handleToggle}
           disabled={isPending}
-          className="mt-0.5 h-5 w-5 p-0 hover:bg-transparent"
+          className="mt-1 h-6 w-6 p-0 hover:bg-transparent touch-manipulation"
         >
           {task.is_completed ? (
             <CheckSquare size={20} className="text-green-400" />
@@ -121,15 +143,15 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
         </Button>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-1">
+          <div className="flex items-start justify-between mb-2">
             <h3 className={cn(
-              'font-medium text-white truncate',
+              'font-bold text-lg text-white leading-tight pr-2',
               task.is_completed && 'line-through text-gray-400'
             )}>
               {task.title}
             </h3>
             <span className={cn(
-              'text-xs px-2 py-0.5 rounded-full border',
+              'text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap shrink-0',
               categoryColors[task.category]
             )}>
               {task.category}
@@ -137,7 +159,7 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
           </div>
 
           {task.description && (
-            <p className="text-sm text-gray-400 mb-2 line-clamp-2">
+            <p className="text-sm text-gray-300 mb-3 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
           )}
@@ -145,34 +167,36 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {dueDateText && (
-                <div className="flex items-center space-x-1 text-xs text-gray-400">
-                  <Clock size={12} />
-                  <span>{dueDateText}</span>
+                <div className="flex items-center space-x-1.5 text-sm text-gray-400">
+                  <Clock size={14} />
+                  <span className="font-medium">{dueDateText}</span>
                 </div>
               )}
-              <span className={cn('text-xs font-medium', priorityColors[task.priority])}>
+              <span className={cn('text-xs font-semibold px-2 py-1 rounded-md bg-opacity-20', priorityColors[task.priority])}>
                 {task.priority}
               </span>
             </div>
 
             {/* Desktop action buttons */}
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-0.5">
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => onEdit(task)}
-                className="h-7 px-2 text-xs text-gray-400 hover:text-blue-400"
+                className="h-5 w-5 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded touch-manipulation"
+                title="Edit task"
               >
-                <Edit size={12} />
+                <Edit size={10} />
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={handleDelete}
-                disabled={isPending}
-                className="h-7 px-2 text-xs text-gray-400 hover:text-red-400"
+                disabled={isPending || isDeleting}
+                className="h-5 w-5 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded touch-manipulation"
+                title={isDeleting ? "Deleting..." : "Delete task"}
               >
-                <Trash2 size={12} />
+                <Trash2 size={10} />
               </Button>
             </div>
           </div>

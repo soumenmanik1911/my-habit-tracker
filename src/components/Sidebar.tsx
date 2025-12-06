@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Code, GraduationCap, Wallet, Dumbbell, BarChart3, Settings, CheckSquare } from 'lucide-react';
+import { Home, Code, GraduationCap, Wallet, Dumbbell, BarChart3, Settings, CheckSquare, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FadeIn, StaggeredContainer } from './ui/animations';
 import { ThemeToggle } from './ui/theme-toggle';
@@ -16,6 +16,7 @@ const navigation = [
   { name: 'Wallet', href: '/wallet', icon: Wallet },
   { name: 'Health', href: '/health', icon: Dumbbell },
   { name: 'Progress', href: '/progress', icon: BarChart3 },
+  { name: 'Reset', href: '/reset', icon: RotateCcw },
 ];
 
 export function Sidebar({ isOpen, onToggle }: { isOpen?: boolean; onToggle?: () => void }) {
