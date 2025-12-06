@@ -108,10 +108,9 @@ export default function StreakDisplay() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {streaks.map((streak) => {
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {streaks.filter(streak => streak.habitType !== 'dsa').map((streak) => {
         const isEnabled = settings ? (
-          streak.habitType === 'dsa' ? settings.dsaStreakEnabled :
           streak.habitType === 'gym' ? true : // Gym streaks are always enabled but with threshold
           settings.collegeStreakEnabled
         ) : true;

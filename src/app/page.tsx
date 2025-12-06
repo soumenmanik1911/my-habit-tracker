@@ -13,6 +13,7 @@ import ContributionGraph from '@/components/dashboard/ContributionGraph';
 import HabitMatrix from '@/components/HabitMatrix';
 import FinanceCard from '@/components/FinanceCard';
 import HabitLogger from '@/components/HabitLogger';
+import ProblemTypeOverview from '@/components/ProblemTypeOverview';
 import StreakDisplay from '@/components/StreakDisplay';
 import HabitSettings from '@/components/HabitSettings';
 import { MainLayout } from '@/components/MainLayout';
@@ -415,6 +416,9 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Problem Type Overview */}
+        <ProblemTypeOverview />
+
         {/* Streak Display */}
         <StreakDisplay />
 
@@ -612,13 +616,14 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold text-emerald-400">Add DSA Problem</h3>
                 <form onSubmit={handleDsaSubmit} className="space-y-3">
                   <Input
+                    name="problemName"
                     placeholder="Problem name"
                     value={dsaForm.problemName}
                     onChange={(e) => setDsaForm(prev => ({ ...prev, problemName: e.target.value }))}
                     className="bg-zinc-800 border-zinc-700 text-white"
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Select value={dsaForm.platform} onValueChange={(value) => setDsaForm(prev => ({ ...prev, platform: value }))}>
+                    <Select name="platform" value={dsaForm.platform} onValueChange={(value) => setDsaForm(prev => ({ ...prev, platform: value }))}>
                       <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                         <SelectValue placeholder="Platform" />
                       </SelectTrigger>
@@ -629,7 +634,7 @@ export default function Dashboard() {
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={dsaForm.difficulty} onValueChange={(value) => setDsaForm(prev => ({ ...prev, difficulty: value }))}>
+                    <Select name="difficulty" value={dsaForm.difficulty} onValueChange={(value) => setDsaForm(prev => ({ ...prev, difficulty: value }))}>
                       <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                         <SelectValue placeholder="Difficulty" />
                       </SelectTrigger>
@@ -660,6 +665,7 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold text-rose-400">Add Expense</h3>
                 <form onSubmit={handleExpenseSubmit} className="space-y-3">
                   <Input
+                    name="amount"
                     type="number"
                     step="0.01"
                     placeholder="Amount (₹)"
@@ -668,7 +674,7 @@ export default function Dashboard() {
                     className="bg-zinc-800 border-zinc-700 text-white"
                     required
                   />
-                  <Select value={expenseForm.category} onValueChange={(value) => setExpenseForm(prev => ({ ...prev, category: value }))}>
+                  <Select name="category" value={expenseForm.category} onValueChange={(value) => setExpenseForm(prev => ({ ...prev, category: value }))}>
                     <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
@@ -682,6 +688,7 @@ export default function Dashboard() {
                   </Select>
                   <div className="flex items-center space-x-2">
                     <input
+                      name="isDebt"
                       type="checkbox"
                       id="isDebt"
                       checked={expenseForm.isDebt}

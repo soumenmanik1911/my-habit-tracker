@@ -405,6 +405,20 @@ export async function getYearlyActivity(): Promise<Record<string, { dsa: number;
   return activityMap;
 }
 
+export async function getDSAProblemStats() {
+  const stats = await sql`
+    SELECT difficulty, COUNT(*) as count
+    FROM DSALogs
+    GROUP BY difficulty
+    ORDER BY difficulty
+  `;
+
+  return stats.map((row: any) => ({
+    difficulty: row.difficulty,
+    count: parseInt(row.count?.toString() || '0'),
+  }));
+}
+
 export async function getHabitMatrixData() {
   try {
     const endDate = new Date();
