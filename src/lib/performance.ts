@@ -203,7 +203,7 @@ export function createCodeSplitComponent<T extends React.ComponentType<any>>(
     timeout?: number;
   }
 ) {
-  const { loadingComponent: Loading, errorComponent: Error, timeout = 30000 } = options || {};
+  const { loadingComponent: Loading, errorComponent: ErrorFallback, timeout = 30000 } = options || {};
   
   return React.lazy(async () => {
     const timeoutPromise = new Promise<never>((_, reject) => {

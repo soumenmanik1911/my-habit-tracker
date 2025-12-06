@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { NavigationHeader } from './NavigationHeader';
+import { Footer } from './Footer';
 import { ThemeToggleFixed } from './ui/theme-toggle';
 import { useTheme } from './ui/theme-provider';
 import { Menu, X } from 'lucide-react';
@@ -24,7 +25,7 @@ export function MainLayout({ children, showSidebar = true, showHeader = true }: 
         ? 'bg-gradient-to-br from-gray-900 via-purple-900/20 to-pink-900/20'
         : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50'
     }`}>
-      <div className="flex">
+      <div className="flex min-h-screen">
         {showSidebar && (
           <Sidebar
             isOpen={sidebarOpen}
@@ -32,7 +33,7 @@ export function MainLayout({ children, showSidebar = true, showHeader = true }: 
           />
         )}
 
-        <main className="flex-1 transition-all duration-300">
+        <main className="flex-1 transition-all duration-300 flex flex-col">
           {/* Navigation Header */}
           {showHeader && <NavigationHeader />}
 
@@ -52,7 +53,7 @@ export function MainLayout({ children, showSidebar = true, showHeader = true }: 
           )}
 
           {/* Main content */}
-          <div className={`min-h-screen ${
+          <div className={`flex-1 ${
             showSidebar ? 'p-4 lg:p-6' : 'p-4'
           }`}>
             <div className={`${
@@ -61,6 +62,9 @@ export function MainLayout({ children, showSidebar = true, showHeader = true }: 
               {children}
             </div>
           </div>
+
+          {/* Footer */}
+          <Footer />
         </main>
       </div>
     </div>

@@ -45,7 +45,7 @@ export async function updateGymAttendance(date: string, attended: boolean, worko
       `;
     }
 
-    return { success: true, data: result[0] };
+    return { success: true, data: result[0] as GymAttendanceRecord };
   } catch (error) {
     console.error('Error updating gym attendance:', error);
     return { error: 'Failed to update gym attendance' };
@@ -54,9 +54,9 @@ export async function updateGymAttendance(date: string, attended: boolean, worko
 
 export async function getGymAttendance(date: string): Promise<GymAttendanceRecord | null> {
   try {
-    const record = await sql`
+    const record = (await sql`
       SELECT * FROM GymAttendance WHERE date = ${date}
-    `;
+    `) as GymAttendanceRecord[];
 
     return record.length > 0 ? record[0] : null;
   } catch (error) {
@@ -74,11 +74,11 @@ export async function getGymAttendanceHistory(days: number = 30): Promise<GymAtt
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const records = await sql`
-      SELECT * FROM GymAttendance 
+    const records = (await sql`
+      SELECT * FROM GymAttendance
       WHERE date >= ${startDateStr} AND date <= ${endDateStr}
       ORDER BY date DESC
-    `;
+    `) as GymAttendanceRecord[];
 
     return records;
   } catch (error) {
