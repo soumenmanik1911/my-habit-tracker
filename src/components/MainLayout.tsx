@@ -13,9 +13,10 @@ interface MainLayoutProps {
   children: React.ReactNode;
   showSidebar?: boolean;
   showHeader?: boolean;
+  onSidebarClose?: () => void;
 }
 
-export function MainLayout({ children, showSidebar = true, showHeader = true }: MainLayoutProps) {
+export function MainLayout({ children, showSidebar = true, showHeader = true, onSidebarClose }: MainLayoutProps) {
   const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -25,39 +26,27 @@ export function MainLayout({ children, showSidebar = true, showHeader = true }: 
         ? 'bg-gradient-to-br from-gray-900 via-purple-900/20 to-pink-900/20'
         : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50'
     }`}>
-      <div className="flex min-h-screen">
-        {showSidebar && (
+      {/* Desktop Sidebar - only show on lg screens and above */}
+      {showSidebar && (
+        <div className="hidden lg:block">
           <Sidebar
-            isOpen={sidebarOpen}
+            isOpen={true}
             onToggle={() => setSidebarOpen(!sidebarOpen)}
+            onClose={() => setSidebarOpen(false)}
           />
-        )}
-
-        <main className="flex-1 transition-all duration-300 flex flex-col">
+        </div>
+      )}
+      <div className="flex min-h-screen">
+        <main className={`flex-1 transition-all duration-300 flex flex-col ${showSidebar ? 'lg:ml-72' : ''} min-h-screen`}>
           {/* Navigation Header */}
           {showHeader && <NavigationHeader />}
 
-          {/* Mobile menu button and theme toggle - only show if no header */}
-          {!showHeader && showSidebar && (
-            <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarOpen(true)}
-                className="p-2"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <ThemeToggleFixed />
-            </div>
-          )}
-
           {/* Main content */}
           <div className={`flex-1 ${
-            showSidebar ? 'p-4 lg:p-6' : 'p-4'
+            showSidebar ? 'p-2 lg:p-4' : 'p-2'
           }`}>
             <div className={`${
-              showSidebar ? 'max-w-7xl mx-auto' : 'max-w-full'
+              showSidebar ? 'max-w-full' : 'max-w-full'
             }`}>
               {children}
             </div>

@@ -110,69 +110,18 @@ export function NavigationHeader() {
               </span>
             </Button>
 
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden"
-            >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </Button>
+            {/* Mobile menu button - links to menu page */}
+            <Link href="/menu" className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+              >
+                <Menu size={18} />
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-            <div className="px-4 py-4 space-y-2">
-              {/* Mobile Navigation Links */}
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
-                      isActive
-                        ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-600 dark:text-purple-400 border border-purple-500/30'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                    )}
-                  >
-                    <Icon size={18} className={cn(
-                      'transition-colors',
-                      isActive ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
-                    )} />
-                    <span>{item.name}</span>
-                    {item.badge && (
-                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-              
-              {/* Mobile Quick Actions */}
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-3">
-                <Button
-                  onClick={() => {
-                    handleQuickAddTask();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                  size="sm"
-                >
-                  <Plus size={16} className="mr-2" />
-                  Quick Add Task
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Quick Add Task Dialog */}

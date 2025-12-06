@@ -16,12 +16,6 @@ export interface DashboardStats {
   };
 }
 
-export interface ActivityDay {
-  date: string;
-  dsaCount: number;
-  gymActivity: boolean;
-  expenseCount: number;
-}
 
 export interface RecentTransaction {
   id: number;
@@ -106,47 +100,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
-export async function getActivityHistory(): Promise<ActivityDay[]> {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 365);
-
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
-
-  const activityData = await sql`
-    SELECT
-      d.date,
-      COALESCE(dsa.dsa_count, 0) as dsa_count,
-      COALESCE(h.gym_activity, false) as gym_activity,
-      COALESCE(e.expense_count, 0) as expense_count
-    FROM (
-      SELECT generate_series(${startDateStr}::date, ${endDateStr}::date, '1 day'::interval) as date
-    ) d
-    LEFT JOIN (
-      SELECT date, COUNT(*) as dsa_count
-      FROM DSALogs
-      GROUP BY date
-    ) dsa ON d.date = dsa.date
-    LEFT JOIN (
-      SELECT date, attendance = 'Gym' as gym_activity
-      FROM HealthTracker
-    ) h ON d.date = h.date
-    LEFT JOIN (
-      SELECT date, COUNT(*) as expense_count
-      FROM Expenses
-      GROUP BY date
-    ) e ON d.date = e.date
-    ORDER BY d.date ASC
-  `;
-
-  return activityData.map((row: any) => ({
-    date: row.date,
-    dsaCount: parseInt(row.dsa_count?.toString() || '0'),
-    gymActivity: Boolean(row.gym_activity),
-    expenseCount: parseInt(row.expense_count?.toString() || '0'),
-  }));
-}
 
 export async function getRecentTransactions(): Promise<RecentTransaction[]> {
   const transactions = await sql`
@@ -338,72 +291,6 @@ export async function calculateCollegeStreak(settings: UserSettings): Promise<nu
   return streak;
 }
 
-export async function getYearlyActivity(): Promise<Record<string, { dsa: number; gym: boolean; college: boolean }>> {
-  // Calculate the date 365 days ago
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 364); // 365 days including today
-
-  // Format dates as YYYY-MM-DD
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
-
-  // Raw SQL query to fetch DSA problems solved per date
-  // This aggregates the count of problems solved for each date in the last year
-  const dsaData = await sql`
-    SELECT
-      date,
-      COUNT(*) as dsa_count
-    FROM DSALogs
-    WHERE date BETWEEN ${startDateStr} AND ${endDateStr}
-    GROUP BY date
-    ORDER BY date ASC
-  `;
-
-  // Raw SQL query to fetch gym and college attendance
-  const activityData = await sql`
-    SELECT
-      date,
-      attendance = 'Gym' as gym_done,
-      college_attendance
-    FROM HealthTracker
-    WHERE date BETWEEN ${startDateStr} AND ${endDateStr}
-    ORDER BY date ASC
-  `;
-
-  // Merge the data into a Map for easy lookup
-  const activityMap: Record<string, { dsa: number; gym: boolean; college: boolean }> = {};
-
-  // Initialize all dates in the range with default values (safer loop)
-  let currentDate = new Date(startDate);
-  const end = new Date(endDate);
-  while (currentDate <= end) {
-    const dateStr = currentDate.toISOString().split('T')[0];
-    activityMap[dateStr] = { dsa: 0, gym: false, college: false };
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  // Populate DSA counts with safety check
-  dsaData.forEach((row: any) => {
-    const dateStr = row.date;
-    if (!activityMap[dateStr]) {
-      activityMap[dateStr] = { dsa: 0, gym: false, college: false };
-    }
-    activityMap[dateStr].dsa = parseInt(row.dsa_count?.toString() || '0');
-  });
-
-  // Populate gym and college attendance with safety check
-  activityData.forEach((row: any) => {
-    const dateStr = row.date;
-    if (!activityMap[dateStr]) {
-      activityMap[dateStr] = { dsa: 0, gym: false, college: false };
-    }
-    activityMap[dateStr].gym = Boolean(row.gym_done);
-    activityMap[dateStr].college = Boolean(row.college_attendance);
-  });
-
-  return activityMap;
-}
 
 export async function getDSAProblemStats() {
   const stats = await sql`
@@ -417,65 +304,4 @@ export async function getDSAProblemStats() {
     difficulty: row.difficulty,
     count: parseInt(row.count?.toString() || '0'),
   }));
-}
-
-export async function getHabitMatrixData() {
-  try {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 6); // Last 7 days
-
-    // Use local date format to avoid timezone issues
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-
-    const matrixData = await sql`
-      SELECT
-        d.date,
-        COALESCE(dsa.dsa_count > 0, false) as dsa_done,
-        COALESCE(h.attendance = 'Gym', false) as gym_done,
-        COALESCE(h.mood >= 4, false) as good_mood,
-        COALESCE(h.college_attendance = true, false) as college_done
-      FROM (
-        SELECT generate_series(${startDateStr}::date, ${endDateStr}::date, '1 day'::interval) as date
-      ) d
-      LEFT JOIN (
-        SELECT date, COUNT(*) as dsa_count
-        FROM DSALogs
-        GROUP BY date
-      ) dsa ON d.date = dsa.date
-      LEFT JOIN HealthTracker h ON d.date = h.date
-      ORDER BY d.date ASC
-    `;
-
-    return matrixData.map((row: any) => ({
-      date: row.date,
-      dsa: Boolean(row.dsa_done),
-      gym: Boolean(row.gym_done),
-      mood: Boolean(row.good_mood),
-      college: Boolean(row.college_done),
-    }));
-  } catch (error) {
-    console.error('Error in getHabitMatrixData:', error);
-
-    // Return empty data for the last 7 days instead of throwing
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 6);
-
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push({
-        date: date.toISOString().split('T')[0],
-        dsa: false,
-        gym: false,
-        mood: false,
-        college: false,
-      });
-    }
-
-    return days;
-  }
 }

@@ -58,10 +58,10 @@ export default function ProblemTypeOverview() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="animate-pulse">
                 <div className="h-4 bg-zinc-700 rounded w-1/2 mb-2"></div>
                 <div className="h-8 bg-zinc-700 rounded w-1/4"></div>
@@ -74,9 +74,9 @@ export default function ProblemTypeOverview() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
       {/* Chart Card */}
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-lg md:col-span-2">
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-lg md:col-span-2 min-w-[300px]">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-3 text-white">
             <span className="text-emerald-400">📊</span>

@@ -9,8 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ContributionGraph from '@/components/dashboard/ContributionGraph';
-import HabitMatrix from '@/components/HabitMatrix';
 import FinanceCard from '@/components/FinanceCard';
 import HabitLogger from '@/components/HabitLogger';
 import ProblemTypeOverview from '@/components/ProblemTypeOverview';
@@ -115,19 +113,11 @@ export default function Dashboard() {
   // College attendance state
   const [collegeAttendance, setCollegeAttendance] = useState<boolean | null>(null);
 
-  // HabitMatrix refresh state
-  const [habitMatrixRefresh, setHabitMatrixRefresh] = useState(0);
-
   // Messages
   const [dsaMessage, setDsaMessage] = useState<string>('');
   const [expenseMessage, setExpenseMessage] = useState<string>('');
   const [healthMessage, setHealthMessage] = useState<string>('');
   const [collegeMessage, setCollegeMessage] = useState<string>('');
-
-  // HabitMatrix refresh callback
-  const refreshHabitMatrix = () => {
-    setHabitMatrixRefresh(prev => prev + 1);
-  };
 
   useEffect(() => {
     fetchAllData();
@@ -251,7 +241,6 @@ export default function Dashboard() {
         setDsaForm({ problemName: '', platform: '', difficulty: '', timeTaken: '' });
         fetchDsaProblems();
         fetchAllData();
-        refreshHabitMatrix();
       }
     });
   };
@@ -273,7 +262,6 @@ export default function Dashboard() {
         fetchExpenses();
         fetchRecentTransactions();
         fetchAllData();
-        refreshHabitMatrix();
       }
     });
   };
@@ -288,7 +276,6 @@ export default function Dashboard() {
         fetchExpenses();
         fetchRecentTransactions();
         fetchAllData();
-        refreshHabitMatrix();
       }
     });
   };
@@ -308,7 +295,6 @@ export default function Dashboard() {
         setHealthMessage('Health entry saved successfully!');
         fetchHealthData();
         fetchAllData();
-        refreshHabitMatrix();
       }
     });
   };
@@ -328,7 +314,6 @@ export default function Dashboard() {
         setAttendance(gymAttendance);
         fetchHealthData();
         fetchAllData();
-        refreshHabitMatrix();
         // Clear message after 3 seconds
         setTimeout(() => setHealthMessage(''), 3000);
       }
@@ -344,7 +329,6 @@ export default function Dashboard() {
         setCollegeMessage(`College attendance marked as ${attended ? 'present' : 'absent'}!`);
         setCollegeAttendance(attended);
         fetchAllData();
-        refreshHabitMatrix();
         // Clear message after 3 seconds
         setTimeout(() => setCollegeMessage(''), 3000);
       }
@@ -361,7 +345,6 @@ export default function Dashboard() {
       } else {
         setCollegeMessage('College attendance counter reset to 0!');
         fetchAllData();
-        refreshHabitMatrix();
         // Clear message after 3 seconds
         setTimeout(() => setCollegeMessage(''), 3000);
       }
@@ -371,15 +354,13 @@ export default function Dashboard() {
   if (loading) {
     return (
       <MainLayout showHeader={true} showSidebar={true}>
-        <div className="min-h-screen bg-zinc-950 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-zinc-800 rounded w-1/4"></div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-24 bg-zinc-800 rounded-xl"></div>
-                ))}
-              </div>
+        <div className="min-h-screen bg-zinc-950">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-zinc-800 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-zinc-800 rounded-xl"></div>
+              ))}
             </div>
           </div>
         </div>
@@ -396,8 +377,8 @@ export default function Dashboard() {
 
   return (
     <MainLayout showHeader={true} showSidebar={true}>
-      <div className="min-h-screen bg-zinc-950 text-white p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-zinc-950 text-white">
+        <div className="space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -423,60 +404,36 @@ export default function Dashboard() {
         <StreakDisplay />
 
         {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
           {/* Row 1: Quick Stats */}
           <Card className="bg-zinc-900/80 backdrop-blur-sm border border-emerald-500/20 rounded-xl shadow-lg shadow-emerald-500/10 col-span-1">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="text-3xl font-bold text-emerald-400">{data?.totalSolved || 0}</div>
               <div className="text-zinc-400 text-sm">Total DSA</div>
             </CardContent>
           </Card>
 
           <Card className="bg-zinc-900/80 backdrop-blur-sm border border-rose-500/20 rounded-xl shadow-lg shadow-rose-500/10 col-span-1">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="text-3xl font-bold text-rose-400">₹{(data?.totalDebt || 0).toFixed(0)}</div>
               <div className="text-zinc-400 text-sm">Total Udhaar</div>
             </CardContent>
           </Card>
 
           <Card className="bg-zinc-900/80 backdrop-blur-sm border border-green-500/20 rounded-xl shadow-lg shadow-green-500/10 col-span-1">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="text-3xl font-bold text-green-400">₹{(data?.totalExpense || 0).toFixed(0)}</div>
               <div className="text-zinc-400 text-sm">Total Expense</div>
             </CardContent>
           </Card>
 
           <Card className="bg-zinc-900/80 backdrop-blur-sm border border-blue-500/20 rounded-xl shadow-lg shadow-blue-500/10 col-span-1">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="text-3xl font-bold text-blue-400">{data?.collegeAttendance?.presentDays || 0}</div>
               <div className="text-zinc-400 text-sm">College Present</div>
             </CardContent>
           </Card>
 
-          {/* Row 2: The Big Visuals */}
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-3">
-            <CardHeader className="border-b border-zinc-700/50">
-              <CardTitle className="text-white flex items-center gap-2">
-                <span className="text-emerald-400">📊</span>
-                The Grind (Last 365 Days)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <ContributionGraph />
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1">
-            <CardHeader className="border-b border-zinc-700/50">
-              <CardTitle className="text-white flex items-center gap-2">
-                <span className="text-indigo-400">📅</span>
-                Habit Matrix
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <HabitMatrix onRefresh={refreshHabitMatrix} key={habitMatrixRefresh} />
-            </CardContent>
-          </Card>
 
           {/* Row 3: Finance & Activity */}
           <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
@@ -486,7 +443,7 @@ export default function Dashboard() {
                 Finance Overview
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-3 sm:p-4">
               <FinanceCard />
             </CardContent>
           </Card>
@@ -498,7 +455,7 @@ export default function Dashboard() {
                 Recent Activity
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-3 sm:p-4">
               <div className="space-y-4 sm:space-y-6">
                 {/* Recent DSA Problems */}
                 {dsaProblems.length > 0 && (
@@ -609,7 +566,7 @@ export default function Dashboard() {
               Quick Actions
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
               {/* DSA Quick Add */}
               <div className="space-y-4">
@@ -797,7 +754,7 @@ export default function Dashboard() {
               Habit Settings
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <HabitSettings />
           </CardContent>
         </Card>

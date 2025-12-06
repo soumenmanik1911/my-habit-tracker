@@ -38,63 +38,99 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="bg-zinc-900/80 backdrop-blur-sm border-t border-zinc-700/50 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Version Control Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-lg font-semibold text-white">Version Control</h3>
-            </div>
-            <div className="space-y-2 text-sm text-zinc-300">
-              <p>Built with modern web technologies</p>
-              <p>Git repository: habit-tracker</p>
-              <p>Continuous integration enabled</p>
-              <p>Automated deployments</p>
+    <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl border-t border-slate-700/50 mt-auto relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(56,189,248,0.02)_25%,rgba(56,189,248,0.02)_50%,transparent_50%,transparent_75%,rgba(56,189,248,0.02)_75%)] bg-[length:20px_20px]" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Daily Quote Section - Highlighted and Centered */}
+          <div className="lg:col-span-3 lg:order-1 order-2">
+            <div className="text-center space-y-6">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                  <Quote className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Daily Inspiration
+                </h3>
+              </div>
+
+              <div className="max-w-3xl mx-auto">
+                <Card className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-600/50 backdrop-blur-sm shadow-2xl shadow-cyan-500/10">
+                  <CardContent className="p-8">
+                    <blockquote className="text-xl text-slate-200 leading-relaxed font-medium italic relative">
+                      <span className="absolute -top-2 -left-2 text-4xl text-cyan-400/30">"</span>
+                      {dailyQuote}
+                      <span className="absolute -bottom-6 -right-2 text-4xl text-cyan-400/30">"</span>
+                    </blockquote>
+                    <div className="mt-6 flex items-center justify-center">
+                      <div className="w-16 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
 
-          {/* Daily Quote Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Quote className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-white">Daily Motivation</h3>
+          {/* Version Control Section */}
+          <div className="space-y-4 lg:order-2 order-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <GitBranch className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Technology</h3>
             </div>
-            <Card className="bg-zinc-800/50 border-zinc-700/50">
-              <CardContent className="p-4">
-                <blockquote className="text-sm text-zinc-200 italic">
-                  "{dailyQuote}"
-                </blockquote>
-              </CardContent>
-            </Card>
+            <div className="space-y-3 text-sm text-slate-300">
+              <p className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                Next.js & TypeScript
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                PostgreSQL Database
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                Tailwind CSS & Framer Motion
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                Vercel Deployment
+              </p>
+            </div>
           </div>
 
           {/* Credits Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-rose-400" />
-              <h3 className="text-lg font-semibold text-white">Credits</h3>
+          <div className="space-y-4 lg:order-3 order-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/25">
+                <Heart className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">About</h3>
             </div>
-            <div className="space-y-2 text-sm text-zinc-300">
-              <p>Developed by <span className="font-semibold text-white">Soumen Manik</span></p>
-              <p>Full-stack developer passionate about productivity</p>
-              <p>Built with Next.js, TypeScript, and Tailwind CSS</p>
-              <p>© 2024 All rights reserved</p>
+            <div className="space-y-3 text-sm text-slate-300">
+              <p className="font-medium text-white">Soumen Manik</p>
+              <p>Full-stack developer & productivity enthusiast</p>
+              <p className="text-slate-400">Building tools that matter</p>
+              <p className="text-slate-400">© 2025 All rights reserved</p>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-zinc-700/50">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-zinc-400">
-              Habit Tracker - Track your progress, achieve your goals
+        <div className="mt-12 pt-8 border-t border-slate-600/50">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+            <p className="text-sm text-slate-400 text-center sm:text-left">
+              DevLife - Your personal productivity companion for tracking habits and achieving goals
             </p>
-            <div className="flex items-center gap-4 text-sm text-zinc-400">
-              <span>v1.0.0</span>
-              <span>•</span>
-              <span>Last updated: {new Date().toLocaleDateString('en-US')}</span>
+            <div className="flex items-center gap-6 text-sm text-slate-400">
+              <span className="px-3 py-1 bg-slate-800/50 rounded-full border border-slate-600/30">v1.1.0</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="text-center">Updated {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
           </div>
         </div>

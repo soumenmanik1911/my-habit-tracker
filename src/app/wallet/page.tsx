@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { addExpense, deleteExpense } from '@/actions/expenses';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,11 @@ export default function WalletPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string>('');
+
+  // Fetch expenses on component mount
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
 
   // Fetch expenses (current month)
   const fetchExpenses = async () => {
@@ -62,8 +67,8 @@ export default function WalletPage() {
   // Calculate totals
   const regularExpenses = expenses.filter(e => !e.is_debt);
   const debts = expenses.filter(e => e.is_debt);
-  const totalExpenses = regularExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalDebts = debts.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = regularExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const totalDebts = debts.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   // Group expenses by category
   const expensesByCategory = regularExpenses.reduce((acc, expense) => {
@@ -173,7 +178,7 @@ export default function WalletPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-400">
-              ₹{totalExpenses.toFixed(2)}
+              ₹{Number(totalExpenses).toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -184,7 +189,7 @@ export default function WalletPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-400">
-              ₹{totalDebts.toFixed(2)}
+              ₹{Number(totalDebts).toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -204,7 +209,7 @@ export default function WalletPage() {
               {Object.entries(expensesByCategory).map(([category, amount]) => (
                 <div key={category} className="flex justify-between items-center">
                   <span className="text-gray-300">{category}</span>
-                  <span className="text-white font-medium">₹{amount.toFixed(2)}</span>
+                  <span className="text-white font-medium">₹{Number(amount).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -242,7 +247,7 @@ export default function WalletPage() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-white">
-                        ₹{expense.amount.toFixed(2)}
+                        ₹{Number(expense.amount).toFixed(2)}
                         {expense.is_debt && <span className="text-orange-400 ml-2">(Udhaar)</span>}
                       </h3>
                       <span
