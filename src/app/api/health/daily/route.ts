@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import sql from '@/db/index';
 
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
 
@@ -11,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     const entry = await sql`
-      SELECT * FROM HealthTracker WHERE date = ${date}
+      SELECT * FROM HealthTracker WHERE date = ${date} AND user_id = ${userId}
     `;
 
     return NextResponse.json(entry.length > 0 ? entry[0] : null);

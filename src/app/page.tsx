@@ -14,7 +14,9 @@ import HabitLogger from '@/components/HabitLogger';
 import ProblemTypeOverview from '@/components/ProblemTypeOverview';
 import StreakDisplay from '@/components/StreakDisplay';
 import HabitSettings from '@/components/HabitSettings';
+import SmokingTracker from '@/components/SmokingTracker';
 import { MainLayout } from '@/components/MainLayout';
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs';
 
 interface DashboardData {
   totalSolved: number;
@@ -79,10 +81,401 @@ const moodLabels: Record<number, string> = {
   5: 'Excellent',
 };
 
+// Dashboard Overview Component
+const DashboardOverview = ({ data, dsaProblems, recentTransactions }: {
+  data: DashboardData | null;
+  dsaProblems: Problem[];
+  recentTransactions: RecentTransaction[];
+}) => (
+  <>
+    {/* Problem Type Overview */}
+    <ProblemTypeOverview />
+
+    {/* Streak Display */}
+    <StreakDisplay />
+
+    {/* Bento Grid Layout */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+      {/* Row 1: Quick Stats */}
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-emerald-500/20 rounded-xl shadow-lg shadow-emerald-500/10 col-span-1">
+        <CardContent className="p-4">
+          <div className="text-3xl font-bold text-emerald-400">{data?.totalSolved || 0}</div>
+          <div className="text-zinc-400 text-sm">Total DSA</div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-rose-500/20 rounded-xl shadow-lg shadow-rose-500/10 col-span-1">
+        <CardContent className="p-4">
+          <div className="text-3xl font-bold text-rose-400">₹{(data?.totalDebt || 0).toFixed(0)}</div>
+          <div className="text-zinc-400 text-sm">Total Udhaar</div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-green-500/20 rounded-xl shadow-lg shadow-green-500/10 col-span-1">
+        <CardContent className="p-4">
+          <div className="text-3xl font-bold text-green-400">₹{(data?.totalExpense || 0).toFixed(0)}</div>
+          <div className="text-zinc-400 text-sm">Total Expense</div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-blue-500/20 rounded-xl shadow-lg shadow-blue-500/10 col-span-1">
+        <CardContent className="p-4">
+          <div className="text-3xl font-bold text-blue-400">{data?.collegeAttendance?.presentDays || 0}</div>
+          <div className="text-zinc-400 text-sm">College Present</div>
+        </CardContent>
+      </Card>
+
+      {/* Smoking Tracker - Full Width */}
+      <div className="col-span-1 sm:col-span-2 lg:col-span-4">
+        <SmokingTracker />
+      </div>
+
+      {/* Row 3: Finance & Activity */}
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
+        <CardHeader className="border-b border-zinc-700/50">
+          <CardTitle className="text-white flex items-center gap-2">
+            <span className="text-rose-400">💰</span>
+            Finance Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 sm:p-4">
+          <FinanceCard />
+        </CardContent>
+      </Card>
+
+      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
+        <CardHeader className="border-b border-zinc-700/50">
+          <CardTitle className="text-white flex items-center gap-2">
+            <span className="text-blue-400">📝</span>
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 sm:p-4">
+          <div className="space-y-4 sm:space-y-6">
+            {/* Recent DSA Problems */}
+            {dsaProblems.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+                  <span className="text-emerald-400">🧠</span>
+                  Recent DSA Problems
+                </h4>
+                <div className="space-y-2">
+                  {dsaProblems.slice(0, 3).map((problem) => (
+                    <div key={problem.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/30 hover:bg-zinc-800/70 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white truncate">{problem.problem_name}</div>
+                        <div className="text-xs text-zinc-400 flex items-center gap-2 mt-1">
+                          <span>{problem.platform}</span>
+                          <span>•</span>
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                            problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
+                            problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
+                            'bg-red-900/50 text-red-400'
+                          }`}>
+                            {problem.difficulty}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-2 flex-shrink-0">
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${
+                          problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
+                          problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
+                          'bg-red-900/50 text-red-400'
+                        }`}>
+                          {problem.difficulty}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Transactions */}
+            {recentTransactions.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+                  <span className="text-rose-400">💰</span>
+                  Recent Transactions
+                </h4>
+                <div className="space-y-2">
+                  {recentTransactions.slice(0, 2).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/30 hover:bg-zinc-800/70 transition-colors">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-white">₹{transaction.amount.toFixed(2)}</div>
+                        <div className="text-xs text-zinc-400 flex items-center gap-2 mt-1">
+                          <span>{transaction.category}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                            transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
+                          }`}>
+                            {transaction.is_debt ? 'Udhaar' : 'Expense'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-2 flex-shrink-0">
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${
+                          transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
+                        }`}>
+                          {transaction.is_debt ? 'Udhaar' : 'Expense'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {dsaProblems.length === 0 && recentTransactions.length === 0 && (
+              <div className="text-center text-zinc-500 py-8 sm:py-12">
+                <div className="text-4xl mb-4">📭</div>
+                <div className="text-sm sm:text-base">No recent activity</div>
+                <div className="text-xs text-zinc-600 mt-2">Start tracking your progress!</div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </>
+);
+
+// Dashboard Actions Component
+const DashboardActions = ({
+  dsaForm, setDsaForm, handleDsaSubmit, dsaMessage,
+  expenseForm, setExpenseForm, handleExpenseSubmit, expenseMessage,
+  attendance, handleQuickGymLog, healthMessage,
+  collegeAttendance, handleCollegeAttendanceToggle, collegeMessage,
+  data, handleCollegeReset, isPending
+}: {
+  dsaForm: any;
+  setDsaForm: any;
+  handleDsaSubmit: any;
+  dsaMessage: string;
+  expenseForm: any;
+  setExpenseForm: any;
+  handleExpenseSubmit: any;
+  expenseMessage: string;
+  attendance: string;
+  handleQuickGymLog: any;
+  healthMessage: string;
+  collegeAttendance: boolean | null;
+  handleCollegeAttendanceToggle: any;
+  collegeMessage: string;
+  data: DashboardData | null;
+  handleCollegeReset: any;
+  isPending: boolean;
+}) => (
+  <>
+    {/* Quick Actions Section */}
+    <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl">
+      <CardHeader className="border-b border-zinc-700/50">
+        <CardTitle className="text-white flex items-center gap-2">
+          <span className="text-purple-400">⚡</span>
+          Quick Actions
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
+          {/* DSA Quick Add */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-emerald-400">Add DSA Problem</h3>
+            <form onSubmit={handleDsaSubmit} className="space-y-3">
+              <Input
+                name="problemName"
+                placeholder="Problem name"
+                value={dsaForm.problemName}
+                onChange={(e) => setDsaForm((prev: typeof dsaForm) => ({ ...prev, problemName: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700 text-white"
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Select name="platform" value={dsaForm.platform} onValueChange={(value) => setDsaForm((prev: typeof dsaForm) => ({ ...prev, platform: value }))}>
+                  <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                    <SelectValue placeholder="Platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="LeetCode">LeetCode</SelectItem>
+                    <SelectItem value="GFG">GFG</SelectItem>
+                    <SelectItem value="CodeChef">CodeChef</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select name="difficulty" value={dsaForm.difficulty} onValueChange={(value) => setDsaForm((prev: typeof dsaForm) => ({ ...prev, difficulty: value }))}>
+                  <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                    <SelectValue placeholder="Difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Easy">Easy</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Hard">Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+              >
+                Add Problem
+              </Button>
+            </form>
+            {dsaMessage && (
+              <div className={`text-sm ${dsaMessage.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
+                {dsaMessage}
+              </div>
+            )}
+          </div>
+
+          {/* Expense Quick Add */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-rose-400">Add Expense</h3>
+            <form onSubmit={handleExpenseSubmit} className="space-y-3">
+              <Input
+                name="amount"
+                type="number"
+                step="0.01"
+                placeholder="Amount (₹)"
+                value={expenseForm.amount}
+                onChange={(e) => setExpenseForm((prev: typeof expenseForm) => ({ ...prev, amount: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700 text-white"
+                required
+              />
+              <Select name="category" value={expenseForm.category} onValueChange={(value) => setExpenseForm((prev: typeof expenseForm) => ({ ...prev, category: value }))}>
+                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Food">🍕 Food</SelectItem>
+                  <SelectItem value="Travel">🚌 Travel</SelectItem>
+                  <SelectItem value="Recharge">📱 Recharge</SelectItem>
+                  <SelectItem value="Books">📚 Books</SelectItem>
+                  <SelectItem value="Other">📝 Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center space-x-2">
+                <input
+                  name="isDebt"
+                  type="checkbox"
+                  id="isDebt"
+                  checked={expenseForm.isDebt}
+                  onChange={(e) => setExpenseForm((prev: typeof expenseForm) => ({ ...prev, isDebt: e.target.checked }))}
+                  className="h-4 w-4 text-rose-600"
+                />
+                <label htmlFor="isDebt" className="text-sm text-zinc-300">
+                  Udhaar (Debt)
+                </label>
+              </div>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className={`w-full ${expenseForm.isDebt ? 'bg-red-600 hover:bg-red-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+              >
+                Add {expenseForm.isDebt ? 'Debt' : 'Expense'}
+              </Button>
+            </form>
+            {expenseMessage && (
+              <div className={`text-sm ${expenseMessage.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
+                {expenseMessage}
+              </div>
+            )}
+          </div>
+
+          {/* Gym Quick Log */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-green-400">Gym Session</h3>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => handleQuickGymLog('Gym')}
+                  disabled={isPending}
+                  className={`${attendance === 'Gym' ? 'bg-green-600 hover:bg-green-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+                >
+                  💪 Gym Day
+                </Button>
+                <Button
+                  onClick={() => handleQuickGymLog('Rest Day')}
+                  disabled={isPending}
+                  className={`${attendance === 'Rest Day' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+                >
+                  😴 Rest Day
+                </Button>
+              </div>
+              <Button
+                onClick={() => handleQuickGymLog('Not Going to the Gym')}
+                disabled={isPending}
+                className={`w-full ${attendance === 'Not Going to the Gym' ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+              >
+                🚫 Skip Today
+              </Button>
+            </div>
+            {healthMessage && healthMessage.includes('Gym') && (
+              <div className={`text-sm ${healthMessage.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
+                {healthMessage}
+              </div>
+            )}
+          </div>
+
+          {/* College Attendance */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-400">College Attendance</h3>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => handleCollegeAttendanceToggle(true)}
+                  disabled={isPending}
+                  className={`${collegeAttendance === true ? 'bg-green-600 hover:bg-green-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+                >
+                  ✅ Present
+                </Button>
+                <Button
+                  onClick={() => handleCollegeAttendanceToggle(false)}
+                  disabled={isPending}
+                  className={`${collegeAttendance === false ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+                >
+                  ❌ Absent
+                </Button>
+              </div>
+              {(data?.collegeAttendance?.presentDays || 0) >= 30 && (
+                <Button
+                  onClick={handleCollegeReset}
+                  disabled={isPending}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                >
+                  🔄 Reset Counter (30+ days)
+                </Button>
+              )}
+            </div>
+            {collegeMessage && (
+              <div className={`text-sm ${collegeMessage.includes('success') || collegeMessage.includes('marked') || collegeMessage.includes('reset') ? 'text-green-400' : 'text-red-400'}`}>
+                {collegeMessage}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Settings Section */}
+    <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl">
+      <CardHeader className="border-b border-zinc-700/50">
+        <CardTitle className="text-white flex items-center gap-2">
+          <span className="text-indigo-400">⚙️</span>
+          Habit Settings
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        <HabitSettings />
+      </CardContent>
+    </Card>
+  </>
+);
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('overview');
 
   // DSA state
   const [dsaProblems, setDsaProblems] = useState<Problem[]>([]);
@@ -376,391 +769,89 @@ export default function Dashboard() {
   };
 
   return (
-    <MainLayout showHeader={true} showSidebar={true}>
-      <div className="min-h-screen bg-zinc-950 text-white">
-        <div className="space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
-              DevLife Dashboard
-            </h1>
-            <p className="text-zinc-400 mt-2 text-sm sm:text-base">{getGreeting()}! Ready to grind? 🚀</p>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              onClick={() => window.location.href = '/tasks'}
-              className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white flex-1 sm:flex-none"
-            >
-              📋 Tasks
-            </Button>
+    <>
+      <SignedOut>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 flex items-center justify-center">
+          <div className="text-center space-y-8 px-4">
+            <div>
+              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                DevLife
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mt-4">
+                Your All-in-One Productivity Hub
+              </p>
+              <p className="text-lg text-gray-500 dark:text-gray-400 mt-2">
+                Track habits, manage expenses, solve problems, and stay productive.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <SignInButton mode="modal">
+                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button variant="outline" size="lg">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </div>
           </div>
         </div>
-
-        {/* Problem Type Overview */}
-        <ProblemTypeOverview />
-
-        {/* Streak Display */}
-        <StreakDisplay />
-
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
-          {/* Row 1: Quick Stats */}
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-emerald-500/20 rounded-xl shadow-lg shadow-emerald-500/10 col-span-1">
-            <CardContent className="p-4">
-              <div className="text-3xl font-bold text-emerald-400">{data?.totalSolved || 0}</div>
-              <div className="text-zinc-400 text-sm">Total DSA</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-rose-500/20 rounded-xl shadow-lg shadow-rose-500/10 col-span-1">
-            <CardContent className="p-4">
-              <div className="text-3xl font-bold text-rose-400">₹{(data?.totalDebt || 0).toFixed(0)}</div>
-              <div className="text-zinc-400 text-sm">Total Udhaar</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-green-500/20 rounded-xl shadow-lg shadow-green-500/10 col-span-1">
-            <CardContent className="p-4">
-              <div className="text-3xl font-bold text-green-400">₹{(data?.totalExpense || 0).toFixed(0)}</div>
-              <div className="text-zinc-400 text-sm">Total Expense</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-blue-500/20 rounded-xl shadow-lg shadow-blue-500/10 col-span-1">
-            <CardContent className="p-4">
-              <div className="text-3xl font-bold text-blue-400">{data?.collegeAttendance?.presentDays || 0}</div>
-              <div className="text-zinc-400 text-sm">College Present</div>
-            </CardContent>
-          </Card>
-
-
-          {/* Row 3: Finance & Activity */}
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
-            <CardHeader className="border-b border-zinc-700/50">
-              <CardTitle className="text-white flex items-center gap-2">
-                <span className="text-rose-400">💰</span>
-                Finance Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <FinanceCard />
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
-            <CardHeader className="border-b border-zinc-700/50">
-              <CardTitle className="text-white flex items-center gap-2">
-                <span className="text-blue-400">📝</span>
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <div className="space-y-4 sm:space-y-6">
-                {/* Recent DSA Problems */}
-                {dsaProblems.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
-                      <span className="text-emerald-400">🧠</span>
-                      Recent DSA Problems
-                    </h4>
-                    <div className="space-y-2">
-                      {dsaProblems.slice(0, 3).map((problem) => (
-                        <div key={problem.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/30 hover:bg-zinc-800/70 transition-colors">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-white truncate">{problem.problem_name}</div>
-                            <div className="text-xs text-zinc-400 flex items-center gap-2 mt-1">
-                              <span>{problem.platform}</span>
-                              <span>•</span>
-                              <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
-                                problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                                'bg-red-900/50 text-red-400'
-                              }`}>
-                                {problem.difficulty}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="ml-2 flex-shrink-0">
-                            <div className={`px-2 py-1 rounded text-xs font-medium ${
-                              problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
-                              problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                              'bg-red-900/50 text-red-400'
-                            }`}>
-                              {problem.difficulty}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Recent Transactions */}
-                {recentTransactions.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
-                      <span className="text-rose-400">💰</span>
-                      Recent Transactions
-                    </h4>
-                    <div className="space-y-2">
-                      {recentTransactions.slice(0, 2).map((transaction) => (
-                        <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/30 hover:bg-zinc-800/70 transition-colors">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-white">₹{transaction.amount.toFixed(2)}</div>
-                            <div className="text-xs text-zinc-400 flex items-center gap-2 mt-1">
-                              <span>{transaction.category}</span>
-                              <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
-                              }`}>
-                                {transaction.is_debt ? 'Udhaar' : 'Expense'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="ml-2 flex-shrink-0">
-                            <div className={`px-2 py-1 rounded text-xs font-medium ${
-                              transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
-                            }`}>
-                              {transaction.is_debt ? 'Udhaar' : 'Expense'}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {dsaProblems.length === 0 && recentTransactions.length === 0 && (
-                  <div className="text-center text-zinc-500 py-8 sm:py-12">
-                    <div className="text-4xl mb-4">📭</div>
-                    <div className="text-sm sm:text-base">No recent activity</div>
-                    <div className="text-xs text-zinc-600 mt-2">Start tracking your progress!</div>
-                  </div>
-                )}
+      </SignedOut>
+      <SignedIn>
+        <MainLayout showHeader={true} showSidebar={true}>
+          <div className="min-h-screen bg-zinc-950 text-white">
+            <div className="space-y-4">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                  DevLife Dashboard
+                </h1>
+                <p className="text-zinc-400 mt-2 text-sm sm:text-base">{getGreeting()}! Ready to grind? 🚀</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Habit Logger Section */}
-        {/* <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl">
-          <CardHeader className="border-b border-zinc-700/50">
-            <CardTitle className="text-white flex items-center gap-2">
-              <span className="text-orange-400">📝</span>
-              Log Today's Habits
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <HabitLogger onHabitLogged={() => {
-              fetchAllData(); // Refresh dashboard data
-              // Could also refresh ContributionGraph if needed
-            }} />
-          </CardContent>
-        </Card> */}
-
-        {/* Quick Actions Section */}
-        <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl">
-          <CardHeader className="border-b border-zinc-700/50">
-            <CardTitle className="text-white flex items-center gap-2">
-              <span className="text-purple-400">⚡</span>
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-              {/* DSA Quick Add */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-emerald-400">Add DSA Problem</h3>
-                <form onSubmit={handleDsaSubmit} className="space-y-3">
-                  <Input
-                    name="problemName"
-                    placeholder="Problem name"
-                    value={dsaForm.problemName}
-                    onChange={(e) => setDsaForm(prev => ({ ...prev, problemName: e.target.value }))}
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Select name="platform" value={dsaForm.platform} onValueChange={(value) => setDsaForm(prev => ({ ...prev, platform: value }))}>
-                      <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                        <SelectValue placeholder="Platform" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="LeetCode">LeetCode</SelectItem>
-                        <SelectItem value="GFG">GFG</SelectItem>
-                        <SelectItem value="CodeChef">CodeChef</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select name="difficulty" value={dsaForm.difficulty} onValueChange={(value) => setDsaForm(prev => ({ ...prev, difficulty: value }))}>
-                      <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                        <SelectValue placeholder="Difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Easy">Easy</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Hard">Hard</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    Add Problem
-                  </Button>
-                </form>
-                {dsaMessage && (
-                  <div className={`text-sm ${dsaMessage.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
-                    {dsaMessage}
-                  </div>
-                )}
-              </div>
-
-              {/* Expense Quick Add */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-rose-400">Add Expense</h3>
-                <form onSubmit={handleExpenseSubmit} className="space-y-3">
-                  <Input
-                    name="amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="Amount (₹)"
-                    value={expenseForm.amount}
-                    onChange={(e) => setExpenseForm(prev => ({ ...prev, amount: e.target.value }))}
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                    required
-                  />
-                  <Select name="category" value={expenseForm.category} onValueChange={(value) => setExpenseForm(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Food">🍕 Food</SelectItem>
-                      <SelectItem value="Travel">🚌 Travel</SelectItem>
-                      <SelectItem value="Recharge">📱 Recharge</SelectItem>
-                      <SelectItem value="Books">📚 Books</SelectItem>
-                      <SelectItem value="Other">📝 Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      name="isDebt"
-                      type="checkbox"
-                      id="isDebt"
-                      checked={expenseForm.isDebt}
-                      onChange={(e) => setExpenseForm(prev => ({ ...prev, isDebt: e.target.checked }))}
-                      className="h-4 w-4 text-rose-600"
-                    />
-                    <label htmlFor="isDebt" className="text-sm text-zinc-300">
-                      Udhaar (Debt)
-                    </label>
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className={`w-full ${expenseForm.isDebt ? 'bg-red-600 hover:bg-red-700' : 'bg-rose-600 hover:bg-rose-700'}`}
-                  >
-                    Add {expenseForm.isDebt ? 'Debt' : 'Expense'}
-                  </Button>
-                </form>
-                {expenseMessage && (
-                  <div className={`text-sm ${expenseMessage.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
-                    {expenseMessage}
-                  </div>
-                )}
-              </div>
-
-              {/* Gym Quick Log */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-green-400">Gym Session</h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={() => handleQuickGymLog('Gym')}
-                      disabled={isPending}
-                      className={`${attendance === 'Gym' ? 'bg-green-600 hover:bg-green-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
-                    >
-                      💪 Gym Day
-                    </Button>
-                    <Button
-                      onClick={() => handleQuickGymLog('Rest Day')}
-                      disabled={isPending}
-                      className={`${attendance === 'Rest Day' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
-                    >
-                      😴 Rest Day
-                    </Button>
-                  </div>
-                  <Button
-                    onClick={() => handleQuickGymLog('Not Going to the Gym')}
-                    disabled={isPending}
-                    className={`w-full ${attendance === 'Not Going to the Gym' ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
-                  >
-                    🚫 Skip Today
-                  </Button>
-                </div>
-                {healthMessage && healthMessage.includes('Gym') && (
-                  <div className={`text-sm ${healthMessage.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
-                    {healthMessage}
-                  </div>
-                )}
-              </div>
-
-              {/* College Attendance */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-blue-400">College Attendance</h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={() => handleCollegeAttendanceToggle(true)}
-                      disabled={isPending}
-                      className={`${collegeAttendance === true ? 'bg-green-600 hover:bg-green-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
-                    >
-                      ✅ Present
-                    </Button>
-                    <Button
-                      onClick={() => handleCollegeAttendanceToggle(false)}
-                      disabled={isPending}
-                      className={`${collegeAttendance === false ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-700 hover:bg-zinc-600'}`}
-                    >
-                      ❌ Absent
-                    </Button>
-                  </div>
-                  {(data?.collegeAttendance?.presentDays || 0) >= 30 && (
-                    <Button
-                      onClick={handleCollegeReset}
-                      disabled={isPending}
-                      className="w-full bg-orange-600 hover:bg-orange-700"
-                    >
-                      🔄 Reset Counter (30+ days)
-                    </Button>
-                  )}
-                </div>
-                {collegeMessage && (
-                  <div className={`text-sm ${collegeMessage.includes('success') || collegeMessage.includes('marked') || collegeMessage.includes('reset') ? 'text-green-400' : 'text-red-400'}`}>
-                    {collegeMessage}
-                  </div>
-                )}
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  onClick={() => window.location.href = '/tasks'}
+                  className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white flex-1 sm:flex-none"
+                >
+                  📋 Tasks
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Settings Section */}
-        <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl">
-          <CardHeader className="border-b border-zinc-700/50">
-            <CardTitle className="text-white flex items-center gap-2">
-              <span className="text-indigo-400">⚙️</span>
-              Habit Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <HabitSettings />
-          </CardContent>
-        </Card>
+            {/* Tab Toggle */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setActiveTab('overview')}
+                className={`flex-1 ${activeTab === 'overview' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-zinc-700 hover:bg-zinc-600'} text-white`}
+              >
+                📊 Overview
+              </Button>
+              <Button
+                onClick={() => setActiveTab('actions')}
+                className={`flex-1 ${activeTab === 'actions' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-zinc-700 hover:bg-zinc-600'} text-white`}
+              >
+                ✍️ Quick Actions
+              </Button>
+            </div>
+
+            {/* Conditional Rendering */}
+            {activeTab === 'overview' && <DashboardOverview data={data} dsaProblems={dsaProblems} recentTransactions={recentTransactions} />}
+
+            {activeTab === 'actions' && <DashboardActions
+              dsaForm={dsaForm} setDsaForm={setDsaForm} handleDsaSubmit={handleDsaSubmit} dsaMessage={dsaMessage}
+              expenseForm={expenseForm} setExpenseForm={setExpenseForm} handleExpenseSubmit={handleExpenseSubmit} expenseMessage={expenseMessage}
+              attendance={attendance} handleQuickGymLog={handleQuickGymLog} healthMessage={healthMessage}
+              collegeAttendance={collegeAttendance} handleCollegeAttendanceToggle={handleCollegeAttendanceToggle} collegeMessage={collegeMessage}
+              data={data} handleCollegeReset={handleCollegeReset} isPending={isPending}
+            />}
 
       </div>
       </div>
     </MainLayout>
+    </SignedIn>
+    </>
   );
 }

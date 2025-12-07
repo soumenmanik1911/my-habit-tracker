@@ -1,9 +1,15 @@
 'use server';
 
+import { auth } from '@clerk/nextjs/server';
 import sql from '@/db/index';
 
 export async function addProblem(formData: FormData) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: 'Unauthorized' };
+    }
+
     const problemName = formData.get('problemName') as string;
     const platform = formData.get('platform') as string;
     const difficulty = formData.get('difficulty') as string;
@@ -15,8 +21,8 @@ export async function addProblem(formData: FormData) {
     }
 
     const result = await sql`
-      INSERT INTO DSALogs (problem_name, platform, difficulty, time_taken_mins)
-      VALUES (${problemName || 'Unnamed Problem'}, ${platform}, ${difficulty}, ${timeTaken ? parseInt(timeTaken) : 0})
+      INSERT INTO DSALogs (problem_name, platform, difficulty, time_taken_mins, user_id)
+      VALUES (${problemName || 'Unnamed Problem'}, ${platform}, ${difficulty}, ${timeTaken ? parseInt(timeTaken) : 0}, ${userId})
     `;
 
     return { success: true };

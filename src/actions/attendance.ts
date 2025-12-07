@@ -1,9 +1,15 @@
 'use server';
 
+import { auth } from '@clerk/nextjs/server';
 import sql from '@/db/index';
 
 export async function updateAttendance(subjectId: number, type: 'present' | 'absent') {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: 'Unauthorized' };
+    }
+
     if (!subjectId) {
       return { error: 'Subject ID is required' };
     }
@@ -14,7 +20,7 @@ export async function updateAttendance(subjectId: number, type: 'present' | 'abs
 
     // First, get the current attendance record
     const currentRecord = await sql`
-      SELECT total_classes, attended_classes FROM Attendance WHERE id = ${subjectId}
+      SELECT total_classes, attended_classes FROM Attendance WHERE id = ${subjectId} AND user_id = ${userId}
     `;
 
     if (currentRecord.length === 0) {
@@ -33,12 +39,12 @@ export async function updateAttendance(subjectId: number, type: 'present' | 'abs
 
     // Update the attendance record
     await sql`
-      UPDATE Attendance 
-      SET 
+      UPDATE Attendance
+      SET
         total_classes = ${total_classes + 1},
         attended_classes = ${newAttendedClasses},
         last_updated = CURRENT_TIMESTAMP
-      WHERE id = ${subjectId}
+      WHERE id = ${subjectId} AND user_id = ${userId}
     `;
 
     return { success: true };
@@ -50,13 +56,18 @@ export async function updateAttendance(subjectId: number, type: 'present' | 'abs
 
 export async function addNewSubject(subjectName: string) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: 'Unauthorized' };
+    }
+
     if (!subjectName || subjectName.trim() === '') {
       return { error: 'Subject name is required' };
     }
 
     await sql`
-      INSERT INTO Attendance (subject_name, total_classes, attended_classes)
-      VALUES (${subjectName.trim()}, 0, 0)
+      INSERT INTO Attendance (subject_name, total_classes, attended_classes, user_id)
+      VALUES (${subjectName.trim()}, 0, 0, ${userId})
     `;
 
     return { success: true };

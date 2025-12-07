@@ -7,6 +7,7 @@ import { CheckSquare, BarChart3, Menu, X, Plus, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AddTaskDialog } from './AddTaskDialog';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 
 interface NavigationItem {
   name: string;
@@ -109,6 +110,29 @@ export function NavigationHeader() {
                 <span className="text-[10px] font-bold text-white">2</span>
               </span>
             </Button>
+
+            {/* Authentication Buttons */}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="outline" size="sm" className="mr-2">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8"
+                  }
+                }}
+              />
+            </SignedIn>
 
             {/* Mobile menu button - links to menu page */}
             <Link href="/menu" className="md:hidden">

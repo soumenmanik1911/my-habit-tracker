@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import sql from '@/db/index';
 
 /**
@@ -8,8 +9,14 @@ import sql from '@/db/index';
  */
 export async function GET() {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const history = await sql`
       SELECT * FROM HealthTracker
+      WHERE user_id = ${userId}
       ORDER BY date DESC
     `;
 

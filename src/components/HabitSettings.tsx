@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast';
+import { toggleSmokingVisibility } from '@/actions/smoking';
 
 interface Settings {
   dsaStreakEnabled: boolean;
   gymMissThreshold: number;
   collegeStreakEnabled: boolean;
+  showSmokingTracker: boolean;
+  cigarettePrice: string;
 }
 
 export default function HabitSettings() {
@@ -49,6 +52,10 @@ export default function HabitSettings() {
       newSettings.gymMissThreshold = parseInt(value as string);
     } else if (key === 'college_streak_enabled') {
       newSettings.collegeStreakEnabled = value as boolean;
+    } else if (key === 'show_smoking_tracker') {
+      newSettings.showSmokingTracker = value as boolean;
+    } else if (key === 'cigarette_price') {
+      newSettings.cigarettePrice = value as string;
     }
 
     setSettings(newSettings);
@@ -65,6 +72,11 @@ export default function HabitSettings() {
 
       if (!response.ok) {
         throw new Error('Failed to update setting');
+      }
+
+      // For smoking tracker visibility, also call the action to update immediately
+      if (key === 'show_smoking_tracker') {
+        await toggleSmokingVisibility(value as boolean);
       }
 
       addToast({ type: 'success', title: 'Success', message: 'Settings updated!' });
@@ -151,6 +163,39 @@ export default function HabitSettings() {
             onChange={(e) => handleSettingChange('college_streak_enabled', e.target.checked)}
             disabled={saving}
             className="h-4 w-4 text-blue-600 bg-zinc-800 border-zinc-700 rounded"
+          />
+        </div>
+
+        {/* Smoking Tracker Settings */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-white font-medium">Show Smoking Tracker</h3>
+            <p className="text-zinc-400 text-sm">Display the smoking tracker widget on the dashboard</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={settings.showSmokingTracker}
+            onChange={(e) => handleSettingChange('show_smoking_tracker', e.target.checked)}
+            disabled={saving}
+            className="h-4 w-4 text-red-600 bg-zinc-800 border-zinc-700 rounded"
+          />
+        </div>
+
+        {/* Cigarette Price Setting */}
+        <div className="space-y-2">
+          <div>
+            <h3 className="text-white font-medium">Cigarette Price (₹)</h3>
+            <p className="text-zinc-400 text-sm">Price per cigarette for cost calculations</p>
+          </div>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={settings.cigarettePrice}
+            onChange={(e) => handleSettingChange('cigarette_price', e.target.value)}
+            disabled={saving}
+            className="w-full bg-zinc-800 border-zinc-700 text-white rounded px-3 py-2"
+            placeholder="6.00"
           />
         </div>
 

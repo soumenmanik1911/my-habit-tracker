@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { getUserSettings, updateUserSetting } from '@/lib/data-fetching';
 
 export async function GET() {
   try {
-    const settings = await getUserSettings();
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const settings = await getUserSettings(userId);
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching settings:', error);
@@ -13,8 +19,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { key, value } = await request.json();
-    await updateUserSetting(key, value.toString());
+    await updateUserSetting(key, value.toString(), userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating setting:', error);

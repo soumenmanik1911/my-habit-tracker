@@ -128,9 +128,9 @@ export function Footer() {
               DevLife - Your personal productivity companion for tracking habits and achieving goals
             </p>
             <div className="flex items-center gap-6 text-sm text-slate-400">
-              <span className="px-3 py-1 bg-slate-800/50 rounded-full border border-slate-600/30">v1.1.0</span>
+              <span className="px-3 py-1 bg-slate-800/50 rounded-full border border-slate-600/30">v2.0.0</span>
               <span className="hidden sm:inline">•</span>
-              <span className="text-center">Updated {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <span className="text-center">Updated Dec 7, 2025</span>
             </div>
           </div>
         </div>

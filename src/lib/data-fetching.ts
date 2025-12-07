@@ -30,6 +30,8 @@ export interface UserSettings {
   dsaStreakEnabled: boolean;
   gymMissThreshold: number;
   collegeStreakEnabled: boolean;
+  showSmokingTracker: boolean;
+  cigarettePrice: string;
 }
 
 export interface HabitStreak {
@@ -39,22 +41,22 @@ export interface HabitStreak {
   lastUpdated: string;
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(userId: string): Promise<DashboardStats> {
   const today = new Date().toISOString().split('T')[0];
 
   // Get settings for streak calculations
-  const settings = await getUserSettings();
+  const settings = await getUserSettings(userId);
 
   // Get DSA stats
   const dsaStats = await sql`
-    SELECT COUNT(*) as total_solved FROM DSALogs
+    SELECT COUNT(*) as total_solved FROM DSALogs WHERE user_id = ${userId}
   `;
 
   // Calculate streaks using new functions
   const [dsaStreak, gymStreak, collegeStreak] = await Promise.all([
-    calculateDSAStreak(settings),
-    calculateGymStreak(settings),
-    calculateCollegeStreak(settings),
+    calculateDSAStreak(settings, userId),
+    calculateGymStreak(settings, userId),
+    calculateCollegeStreak(settings, userId),
   ]);
 
   // Get expense stats
@@ -63,6 +65,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       COALESCE(SUM(CASE WHEN is_debt = false THEN amount END), 0) as total_expense,
       COALESCE(SUM(CASE WHEN is_debt = true THEN amount END), 0) as total_debt
     FROM Expenses
+    WHERE user_id = ${userId}
   `;
 
   // Get attendance summary
@@ -71,6 +74,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       MIN(CASE WHEN total_classes > 0 THEN (attended_classes * 100.0 / total_classes) ELSE 100 END) as lowest_percentage,
       COUNT(CASE WHEN total_classes > 0 AND (attended_classes * 100.0 / total_classes) < 75 THEN 1 END) as subjects_at_risk
     FROM Attendance
+    WHERE user_id = ${userId}
   `;
 
   // Get college attendance stats
@@ -80,7 +84,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       COUNT(*) FILTER (WHERE college_attendance = false) as total_absent_days,
       COUNT(*) as total_days
     FROM HealthTracker
-    WHERE college_attendance IS NOT NULL
+    WHERE college_attendance IS NOT NULL AND user_id = ${userId}
   `;
 
   return {
@@ -101,10 +105,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 
-export async function getRecentTransactions(): Promise<RecentTransaction[]> {
+export async function getRecentTransactions(userId: string): Promise<RecentTransaction[]> {
   const transactions = await sql`
     SELECT id, amount, category, description, is_debt, date
     FROM Expenses
+    WHERE user_id = ${userId}
     ORDER BY date DESC, id DESC
     LIMIT 5
   `;
@@ -119,11 +124,11 @@ export async function getRecentTransactions(): Promise<RecentTransaction[]> {
   }));
 }
 
-export async function getExpenseBreakdown() {
+export async function getExpenseBreakdown(userId: string) {
   const breakdown = await sql`
     SELECT category, SUM(amount) as total
     FROM Expenses
-    WHERE is_debt = false
+    WHERE is_debt = false AND user_id = ${userId}
     GROUP BY category
     ORDER BY total DESC
   `;
@@ -134,10 +139,11 @@ export async function getExpenseBreakdown() {
   }));
 }
 
-export async function getUserSettings(): Promise<UserSettings> {
+export async function getUserSettings(userId: string): Promise<UserSettings> {
   const settings = await sql`
     SELECT setting_key, setting_value
     FROM UserSettings
+    WHERE user_id = ${userId}
   `;
 
   const settingsMap: Record<string, string> = {};
@@ -149,6 +155,8 @@ export async function getUserSettings(): Promise<UserSettings> {
     dsaStreakEnabled: settingsMap.dsa_streak_enabled === 'true',
     gymMissThreshold: parseInt(settingsMap.gym_miss_threshold || '3'),
     collegeStreakEnabled: settingsMap.college_streak_enabled === 'true',
+    showSmokingTracker: settingsMap.show_smoking_tracker !== 'false', // Default true
+    cigarettePrice: settingsMap.cigarette_price || '6',
   };
 }
 
@@ -166,11 +174,12 @@ export async function getHabitStreaks(): Promise<HabitStreak[]> {
   }));
 }
 
-export async function updateUserSetting(key: string, value: string): Promise<void> {
+export async function updateUserSetting(key: string, value: string, userId: string): Promise<void> {
   await sql`
-    UPDATE UserSettings
-    SET setting_value = ${value}, updated_at = CURRENT_TIMESTAMP
-    WHERE setting_key = ${key}
+    INSERT INTO UserSettings (user_id, setting_key, setting_value, updated_at)
+    VALUES (${userId}, ${key}, ${value}, CURRENT_TIMESTAMP)
+    ON CONFLICT (user_id, setting_key)
+    DO UPDATE SET setting_value = ${value}, updated_at = CURRENT_TIMESTAMP
   `;
 }
 
@@ -182,7 +191,7 @@ export async function updateHabitStreak(habitType: string, currentStreak: number
   `;
 }
 
-export async function calculateDSAStreak(settings: UserSettings): Promise<number> {
+export async function calculateDSAStreak(settings: UserSettings, userId: string): Promise<number> {
   if (!settings.dsaStreakEnabled) {
     // If streaks are disabled, return total problems solved today or something else
     // For now, return 0 as placeholder
@@ -195,7 +204,7 @@ export async function calculateDSAStreak(settings: UserSettings): Promise<number
   const dsaDates = await sql`
     SELECT DISTINCT date
     FROM DSALogs
-    WHERE date <= ${today}
+    WHERE date <= ${today} AND user_id = ${userId}
     ORDER BY date DESC
   `;
 
@@ -225,14 +234,14 @@ export async function calculateDSAStreak(settings: UserSettings): Promise<number
   return streak;
 }
 
-export async function calculateGymStreak(settings: UserSettings): Promise<number> {
+export async function calculateGymStreak(settings: UserSettings, userId: string): Promise<number> {
   const today = new Date().toISOString().split('T')[0];
 
   // Get gym activity in chronological order
   const gymData = await sql`
     SELECT date, attendance
     FROM HealthTracker
-    WHERE date <= ${today}
+    WHERE date <= ${today} AND user_id = ${userId}
     ORDER BY date DESC
   `;
 
@@ -260,7 +269,7 @@ export async function calculateGymStreak(settings: UserSettings): Promise<number
   return streak;
 }
 
-export async function calculateCollegeStreak(settings: UserSettings): Promise<number> {
+export async function calculateCollegeStreak(settings: UserSettings, userId: string): Promise<number> {
   if (!settings.collegeStreakEnabled) {
     return 0;
   }
@@ -271,7 +280,7 @@ export async function calculateCollegeStreak(settings: UserSettings): Promise<nu
   const collegeData = await sql`
     SELECT date, college_attendance
     FROM HealthTracker
-    WHERE date <= ${today} AND college_attendance IS NOT NULL
+    WHERE date <= ${today} AND college_attendance IS NOT NULL AND user_id = ${userId}
     ORDER BY date DESC
   `;
 
@@ -292,10 +301,11 @@ export async function calculateCollegeStreak(settings: UserSettings): Promise<nu
 }
 
 
-export async function getDSAProblemStats() {
+export async function getDSAProblemStats(userId: string) {
   const stats = await sql`
     SELECT difficulty, COUNT(*) as count
     FROM DSALogs
+    WHERE user_id = ${userId}
     GROUP BY difficulty
     ORDER BY difficulty
   `;

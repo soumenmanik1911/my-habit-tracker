@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import sql from '@/db/index';
 
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const range = parseInt(searchParams.get('range') || '30');
-    
+
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - range);
-    
+
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
     const today = new Date().toISOString().split('T')[0];
@@ -20,22 +26,22 @@ export async function GET(request: NextRequest) {
     // Get streak data
     const dsaStreak = await sql`
       WITH consecutive_days AS (
-        SELECT date, 
-               ROW_NUMBER() OVER (ORDER BY date DESC) - 
+        SELECT date,
+               ROW_NUMBER() OVER (ORDER BY date DESC) -
                DENSE_RANK() OVER (ORDER BY date DESC) as group_id
-        FROM DSALogs 
-        WHERE date <= ${today}
+        FROM DSALogs
+        WHERE date <= ${today} AND user_id = ${userId}
         GROUP BY date
       )
       SELECT COUNT(*) as streak
       FROM (
-        SELECT date 
-        FROM DSALogs 
-        WHERE date = ${today}
+        SELECT date
+        FROM DSALogs
+        WHERE date = ${today} AND user_id = ${userId}
         UNION
         SELECT date
-        FROM DSALogs 
-        WHERE date <= ${today}
+        FROM DSALogs
+        WHERE date <= ${today} AND user_id = ${userId}
           AND date NOT IN (${today})
         ORDER BY date DESC
         LIMIT 1000
@@ -48,7 +54,7 @@ export async function GET(request: NextRequest) {
         SELECT date,
                ROW_NUMBER() OVER (ORDER BY date) as day_order
         FROM HealthTracker
-        WHERE attendance = 'Gym'
+        WHERE attendance = 'Gym' AND user_id = ${userId}
         ORDER BY date
       ),
       gaps AS (
@@ -75,7 +81,7 @@ export async function GET(request: NextRequest) {
         COUNT(*) FILTER (WHERE college_attendance = true) as total_present_days,
         COUNT(*) FILTER (WHERE college_attendance = false) as total_absent_days
       FROM HealthTracker
-      WHERE college_attendance IS NOT NULL
+      WHERE college_attendance IS NOT NULL AND user_id = ${userId}
     `;
 
     // Multi-dimensional streak tracking
@@ -90,29 +96,29 @@ export async function GET(request: NextRequest) {
 
     // Problem analytics with historical data
     const problemAnalytics = await sql`
-      SELECT 
+      SELECT
         COUNT(*) as total_problems,
         AVG(daily_count) as daily_average
       FROM (
         SELECT date, COUNT(*) as daily_count
-        FROM DSALogs 
-        WHERE date >= ${startDateStr} AND date <= ${endDateStr}
+        FROM DSALogs
+        WHERE date >= ${startDateStr} AND date <= ${endDateStr} AND user_id = ${userId}
         GROUP BY date
       ) daily_counts
     `;
 
     const weeklyProblemData = await sql`
       SELECT date, COUNT(*) as count
-      FROM DSALogs 
-      WHERE date >= ${startDateStr} AND date <= ${endDateStr}
+      FROM DSALogs
+      WHERE date >= ${startDateStr} AND date <= ${endDateStr} AND user_id = ${userId}
       GROUP BY date
       ORDER BY date ASC
     `;
 
     const difficultyBreakdown = await sql`
       SELECT difficulty, COUNT(*) as count
-      FROM DSALogs 
-      WHERE date >= ${startDateStr} AND date <= ${endDateStr}
+      FROM DSALogs
+      WHERE date >= ${startDateStr} AND date <= ${endDateStr} AND user_id = ${userId}
         AND difficulty IS NOT NULL
       GROUP BY difficulty
       ORDER BY count DESC
@@ -120,8 +126,8 @@ export async function GET(request: NextRequest) {
 
     const platformBreakdown = await sql`
       SELECT platform, COUNT(*) as count
-      FROM DSALogs 
-      WHERE date >= ${startDateStr} AND date <= ${endDateStr}
+      FROM DSALogs
+      WHERE date >= ${startDateStr} AND date <= ${endDateStr} AND user_id = ${userId}
         AND platform IS NOT NULL
       GROUP BY platform
       ORDER BY count DESC
@@ -130,11 +136,12 @@ export async function GET(request: NextRequest) {
     // Attendance data with subject-specific analytics
     const subjects = await sql`
       SELECT id, subject_name, total_classes, attended_classes,
-             CASE 
-               WHEN total_classes = 0 THEN 0 
-               ELSE (attended_classes * 100.0 / total_classes) 
+             CASE
+               WHEN total_classes = 0 THEN 0
+               ELSE (attended_classes * 100.0 / total_classes)
              END as percentage
-      FROM Attendance 
+      FROM Attendance
+      WHERE user_id = ${userId}
       ORDER BY subject_name ASC
     `;
 
@@ -168,20 +175,40 @@ export async function GET(request: NextRequest) {
 
     // Health metrics
     const healthMetrics = await sql`
-      SELECT 
+      SELECT
         AVG(sleep_hours) as avg_sleep,
         AVG(mood_score) as avg_mood,
         COUNT(CASE WHEN gym_status = true THEN 1 END) as gym_days
-      FROM DailyStats 
-      WHERE date >= ${startDateStr} AND date <= ${endDateStr}
+      FROM DailyStats
+      WHERE date >= ${startDateStr} AND date <= ${endDateStr} AND user_id = ${userId}
         AND (sleep_hours IS NOT NULL OR mood_score IS NOT NULL OR gym_status IS NOT NULL)
     `;
 
     const weeklyHealthTrends = await sql`
       SELECT date, sleep_hours, mood_score, gym_status
-      FROM DailyStats 
-      WHERE date >= ${weekAgoStr} AND date <= ${today}
+      FROM DailyStats
+      WHERE date >= ${weekAgoStr} AND date <= ${today} AND user_id = ${userId}
       ORDER BY date DESC
+    `;
+
+    // Get DSA activity for last 30 days (for heatmap)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+    const dsaActivity = await sql`
+      SELECT date, COUNT(*) as count
+      FROM DSALogs
+      WHERE date >= ${thirtyDaysAgoStr} AND user_id = ${userId}
+      GROUP BY date
+    `;
+
+    // Get gym activity for last 30 days (for heatmap)
+    const gymActivityForHeatmap = await sql`
+      SELECT date,
+             CASE WHEN gym_status THEN 1 ELSE 0 END as count
+      FROM DailyStats
+      WHERE date >= ${thirtyDaysAgoStr} AND user_id = ${userId}
     `;
 
     const result = {
@@ -226,7 +253,15 @@ export async function GET(request: NextRequest) {
           mood: day.mood_score || undefined,
           gym: day.gym_status || false
         })) || []
-      }
+      },
+      dsaActivity: dsaActivity.map(item => ({
+        date: item.date,
+        count: item.count
+      })),
+      gymActivity: gymActivityForHeatmap.map(item => ({
+        date: item.date,
+        count: item.count
+      }))
     };
 
     return NextResponse.json(result);

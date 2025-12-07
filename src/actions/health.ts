@@ -1,5 +1,6 @@
 'use server';
 
+import { auth } from '@clerk/nextjs/server';
 import sql from '@/db/index';
 
 export type HealthAttendance = 'Gym' | 'Rest Day' | 'Not Going to the Gym';
@@ -23,6 +24,11 @@ export interface HealthTrackerRecord {
  */
 export async function updateHealthTrackerEntry(formData: FormData) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: 'Unauthorized' };
+    }
+
     const date = formData.get('date') as string;
     const attendance = formData.get('attendance') as string;
     const moodRaw = formData.get('mood') as string;
@@ -54,9 +60,9 @@ export async function updateHealthTrackerEntry(formData: FormData) {
     const collegeAttendance = collegeAttendanceRaw === null ? null : collegeAttendanceRaw === 'true';
 
     await sql`
-      INSERT INTO HealthTracker (date, attendance, mood, college_attendance)
-      VALUES (${date}, ${attendance}, ${mood}, ${collegeAttendance})
-      ON CONFLICT (date) DO UPDATE
+      INSERT INTO HealthTracker (date, attendance, mood, college_attendance, user_id)
+      VALUES (${date}, ${attendance}, ${mood}, ${collegeAttendance}, ${userId})
+      ON CONFLICT (date, user_id) DO UPDATE
       SET attendance = EXCLUDED.attendance,
           mood = EXCLUDED.mood,
           college_attendance = EXCLUDED.college_attendance,
@@ -75,8 +81,13 @@ export async function updateHealthTrackerEntry(formData: FormData) {
  */
 export async function getHealthTrackerEntry(date: string): Promise<HealthTrackerRecord | null> {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return null;
+    }
+
     const stats = await sql`
-      SELECT * FROM HealthTracker WHERE date = ${date}
+      SELECT * FROM HealthTracker WHERE date = ${date} AND user_id = ${userId}
     `;
 
     return stats.length > 0 ? (stats[0] as HealthTrackerRecord) : null;
@@ -91,10 +102,15 @@ export async function getHealthTrackerEntry(date: string): Promise<HealthTracker
  */
 export async function updateCollegeAttendance(date: string, attended: boolean) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: 'Unauthorized' };
+    }
+
     await sql`
-      INSERT INTO HealthTracker (date, attendance, mood, college_attendance)
-      VALUES (${date}, 'Rest Day', 3, ${attended})
-      ON CONFLICT (date) DO UPDATE
+      INSERT INTO HealthTracker (date, attendance, mood, college_attendance, user_id)
+      VALUES (${date}, 'Rest Day', 3, ${attended}, ${userId})
+      ON CONFLICT (date, user_id) DO UPDATE
       SET college_attendance = EXCLUDED.college_attendance,
           updated_at = CURRENT_TIMESTAMP
     `;
@@ -111,10 +127,15 @@ export async function updateCollegeAttendance(date: string, attended: boolean) {
  */
 export async function resetCollegeAttendance() {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { error: 'Unauthorized' };
+    }
+
     await sql`
       UPDATE HealthTracker
       SET college_attendance = false
-      WHERE college_attendance = true
+      WHERE college_attendance = true AND user_id = ${userId}
     `;
 
     return { success: true };
@@ -129,12 +150,17 @@ export async function resetCollegeAttendance() {
  */
 export async function getCollegeAttendanceStats() {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { totalPresentDays: 0, totalAbsentDays: 0 };
+    }
+
     const stats = await sql`
       SELECT
         COUNT(*) FILTER (WHERE college_attendance = true) as total_present_days,
         COUNT(*) FILTER (WHERE college_attendance = false) as total_absent_days
       FROM HealthTracker
-      WHERE college_attendance IS NOT NULL
+      WHERE college_attendance IS NOT NULL AND user_id = ${userId}
     `;
 
     return {
@@ -152,8 +178,14 @@ export async function getCollegeAttendanceStats() {
  */
 export async function getHealthHistory(): Promise<HealthTrackerRecord[]> {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return [];
+    }
+
     const records = await sql`
       SELECT * FROM HealthTracker
+      WHERE user_id = ${userId}
       ORDER BY date DESC
     `;
 

@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { getUserSettings, calculateDSAStreak, calculateGymStreak, calculateCollegeStreak } from '@/lib/data-fetching';
 
 export async function GET() {
   try {
-    const settings = await getUserSettings();
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const settings = await getUserSettings(userId);
 
     // Calculate current streaks dynamically
     const [dsaStreak, gymStreak, collegeStreak] = await Promise.all([
-      calculateDSAStreak(settings),
-      calculateGymStreak(settings),
-      calculateCollegeStreak(settings),
+      calculateDSAStreak(settings, userId),
+      calculateGymStreak(settings, userId),
+      calculateCollegeStreak(settings, userId),
     ]);
 
     // Return calculated streaks in the expected format
