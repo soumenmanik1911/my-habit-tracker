@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import sql from '@/db/index';
 
-export async function POST(request: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
   try {
     // Security check
     const authHeader = request.headers.get('authorization');
