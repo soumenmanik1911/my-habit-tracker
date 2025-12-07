@@ -12,6 +12,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import PushManager from "@/components/PushManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "DevLife - Your Productivity Hub",
   description: "All-in-one productivity dashboard for students",
+  icons: {
+    icon: "/vercel.svg",
+  },
 };
 
 export default function RootLayout({
@@ -42,7 +46,13 @@ export default function RootLayout({
           <ThemeProvider>
             <ToastProvider>
               <ErrorBoundary>
-                {children}
+                <SignedIn>
+                  <PushManager />
+                  {children}
+                </SignedIn>
+                <SignedOut>
+                  {children}
+                </SignedOut>
               </ErrorBoundary>
             </ToastProvider>
           </ThemeProvider>

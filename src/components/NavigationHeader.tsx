@@ -46,9 +46,11 @@ export function NavigationHeader() {
           <div className="flex items-center space-x-8">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DL</span>
-              </div>
+              <img
+                src="/vercel.svg"
+                alt="DevLife Logo"
+                className="w-8 h-8"
+              />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 DevLife
               </span>
