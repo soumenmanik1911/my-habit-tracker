@@ -19,9 +19,9 @@ export async function GET(request: Request) {
     // Get today's date
     const today = new Date().toISOString().split('T')[0];
 
-    // Query tasks due today that are not completed, joined with UserSettings for onesignal_id
-    const tasksWithSubscriptions = await sql`
-      SELECT t.user_id, us.setting_value as onesignal_id
+    // Query distinct users who have tasks due today that are not completed, with their onesignal_id
+    const usersWithSubscriptions = await sql`
+      SELECT DISTINCT t.user_id, us.setting_value as onesignal_id
       FROM tasks t
       JOIN UserSettings us ON t.user_id = us.user_id
       WHERE DATE(t.due_date) = ${today}
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     `;
 
     // Send notifications
-    const notificationPromises = tasksWithSubscriptions.map(async (row: any) => {
+    const notificationPromises = usersWithSubscriptions.map(async (row: any) => {
       const onesignalId = row.onesignal_id;
 
       const response = await fetch('https://api.onesignal.com/notifications', {
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      notificationsSent: tasksWithSubscriptions.length
+      notificationsSent: usersWithSubscriptions.length
     });
   } catch (error) {
     console.error('Error in daily reminder cron:', error);
