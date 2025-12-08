@@ -15,11 +15,14 @@ export default function PushManager() {
     const runOneSignal = async () => {
       try {
         // 2. Initialize
-        await OneSignal.init({
+        const oneSignalConfig = {
           appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
           allowLocalhostAsSecureOrigin: true,
-          serviceWorkerPath: "/OneSignalSDKWorker.js",
-        });
+          serviceWorkerPath: "OneSignalSDKWorker.js",
+        };
+        console.log("🔧 OneSignal Config:", oneSignalConfig);
+        console.log("🌐 Current location origin:", window.location.origin);
+        await OneSignal.init(oneSignalConfig);
         console.log("✅ OneSignal Initialized!");
 
         // 3. Prompt the user (Force the slide-down)
