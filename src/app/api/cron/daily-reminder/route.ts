@@ -42,6 +42,7 @@ export async function GET(request: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
           include_subscription_ids: [onesignalId],
           headings: { en: 'Task Reminder' },
           contents: { en: 'You have a task due today!' },
