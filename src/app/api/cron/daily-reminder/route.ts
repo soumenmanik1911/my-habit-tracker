@@ -51,6 +51,20 @@ export async function GET(request: Request) {
 
       if (!response.ok) {
         console.error(`Failed to send notification to ${onesignalId}:`, response.statusText);
+
+        // If the subscription ID is invalid (403 Forbidden or 404 Not Found), remove it from database
+        if (response.status === 403 || response.status === 404) {
+          try {
+            await sql`
+              DELETE FROM UserSettings
+              WHERE setting_key = 'onesignal_id'
+                AND setting_value = ${onesignalId}
+            `;
+            console.log(`Removed invalid subscription ID: ${onesignalId}`);
+          } catch (deleteError) {
+            console.error(`Failed to remove invalid subscription ID ${onesignalId}:`, deleteError);
+          }
+        }
       }
 
       return response;
