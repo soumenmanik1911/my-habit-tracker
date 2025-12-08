@@ -5,12 +5,10 @@ import OneSignal from "react-onesignal";
 import { saveSubscriptionId } from "@/actions/push";
 
 export default function PushManager() {
-  const oneSignalInit = useRef(false);
-
   useEffect(() => {
-    // 1. Guard to prevent double-fire
-    if (oneSignalInit.current) return;
-    oneSignalInit.current = true;
+    // 1. Guard to prevent double-fire (global)
+    if ((window as any).oneSignalInitialized) return;
+    (window as any).oneSignalInitialized = true;
 
     console.log("🚀 PUSH MANAGER STARTING...");
 
@@ -20,7 +18,7 @@ export default function PushManager() {
         await OneSignal.init({
           appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
           allowLocalhostAsSecureOrigin: true,
-          serviceWorkerPath: '/OneSignalSDKWorker.js',
+          serviceWorkerPath: `${window.location.origin}/OneSignalSDKWorker.js`,
         });
         console.log("✅ OneSignal Initialized!");
 
