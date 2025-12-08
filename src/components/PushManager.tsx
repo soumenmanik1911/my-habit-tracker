@@ -18,7 +18,7 @@ export default function PushManager() {
         await OneSignal.init({
           appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
           allowLocalhostAsSecureOrigin: true,
-          serviceWorkerPath: `${window.location.origin}/OneSignalSDKWorker.js`,
+          serviceWorkerPath: "/OneSignalSDKWorker.js",
         });
         console.log("✅ OneSignal Initialized!");
 
