@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckSquare, Plus } from 'lucide-react';
+import { CheckSquare, Plus, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskDrawer } from '@/components/TaskDrawer';
 import { AddTaskDialog } from '@/components/AddTaskDialog';
+import AnalyticsOverview from '@/components/AnalyticsOverview';
 import { getTasks } from '@/actions/tasks';
 import { MainLayout } from '@/components/MainLayout';
+import { cn } from '@/lib/utils';
 
 interface Task {
   id: number;
@@ -27,6 +29,7 @@ export default function TasksPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'tasks' | 'analytics'>('tasks');
 
   const fetchTasks = async () => {
     try {
@@ -106,7 +109,7 @@ export default function TasksPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">Task Manager</h1>
-            <p className="text-gray-400">Stay organized with your academic and personal tasks</p>
+            <p className="text-sm text-gray-400">Stay organized with your academic and personal tasks</p>
           </div>
           <Button
             onClick={() => setAddDialogOpen(true)}
@@ -117,8 +120,39 @@ export default function TasksPage() {
           </Button>
         </div>
 
-        {/* Task Groups */}
-        <div className="space-y-6">
+        {/* Tabs */}
+        <div className="border-b border-gray-700/50">
+          <nav className="flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={cn(
+                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'tasks'
+                  ? 'border-pink-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              )}
+            >
+              <CheckSquare size={16} className="inline mr-2" />
+              My Tasks
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={cn(
+                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                activeTab === 'analytics'
+                  ? 'border-pink-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              )}
+            >
+              <BarChart3 size={16} className="inline mr-2" />
+              Analytics Overview
+            </button>
+          </nav>
+        </div>
+
+        {/* Content based on active tab */}
+        {activeTab === 'tasks' ? (
+          <div className="space-y-6">
           {/* Overdue Tasks */}
           {overdue.length > 0 && (
             <Card className="bg-red-900/20 border-red-500/50">
@@ -129,7 +163,7 @@ export default function TasksPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {overdue.map(task => (
                     <TaskCard
                       key={task.id}
@@ -153,7 +187,7 @@ export default function TasksPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {today.map(task => (
                     <TaskCard
                       key={task.id}
@@ -177,7 +211,7 @@ export default function TasksPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {upcoming.map(task => (
                     <TaskCard
                       key={task.id}
@@ -196,8 +230,8 @@ export default function TasksPage() {
             <Card className="bg-gray-900/50 border-gray-700/50">
               <CardContent className="text-center py-12">
                 <div className="text-6xl mb-4">🎯</div>
-                <h3 className="text-xl font-semibold text-white mb-2">No tasks yet!</h3>
-                <p className="text-gray-400 mb-6">Create your first task to get started with staying organized.</p>
+                <h3 className="text-xl font-semibold text-white mb-2">All caught up!</h3>
+                <p className="text-gray-400 mb-6">No tasks for today. Great job staying organized!</p>
                 <Button
                   onClick={() => setAddDialogOpen(true)}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
@@ -208,7 +242,21 @@ export default function TasksPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Empty State for Today's Tasks specifically */}
+          {today.length === 0 && (overdue.length > 0 || upcoming.length > 0) && (
+            <Card className="bg-green-900/10 border-green-500/30">
+              <CardContent className="text-center py-8">
+                <div className="text-4xl mb-3">✅</div>
+                <h4 className="text-lg font-semibold text-green-400 mb-1">No tasks due today</h4>
+                <p className="text-gray-400 text-sm">You're all set for today!</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
+      ) : (
+        <AnalyticsOverview tasks={tasks} />
+      )}
 
         {/* Task Drawer */}
         <TaskDrawer

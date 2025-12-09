@@ -15,6 +15,7 @@ import ProblemTypeOverview from '@/components/ProblemTypeOverview';
 import StreakDisplay from '@/components/StreakDisplay';
 import HabitSettings from '@/components/HabitSettings';
 import SmokingTracker from '@/components/SmokingTracker';
+import { MorningSyncPopup } from '@/components/MorningSyncPopup';
 import { MainLayout } from '@/components/MainLayout';
 import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs';
 
@@ -506,6 +507,9 @@ export default function Dashboard() {
   // College attendance state
   const [collegeAttendance, setCollegeAttendance] = useState<boolean | null>(null);
 
+  // Morning Sync Popup state
+  const [showMorningPopup, setShowMorningPopup] = useState(false);
+
   // Messages
   const [dsaMessage, setDsaMessage] = useState<string>('');
   const [expenseMessage, setExpenseMessage] = useState<string>('');
@@ -518,6 +522,12 @@ export default function Dashboard() {
     fetchExpenses();
     fetchRecentTransactions();
     fetchHealthData();
+
+    // Check if morning popup should be shown (first visit only)
+    const popupDismissed = sessionStorage.getItem('devlife_morning_popup_dismissed');
+    if (!popupDismissed) {
+      setShowMorningPopup(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -771,31 +781,102 @@ export default function Dashboard() {
   return (
     <>
       <SignedOut>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 flex items-center justify-center">
-          <div className="text-center space-y-8 px-4">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                DevLife
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mt-4">
-                Your All-in-One Productivity Hub
-              </p>
-              <p className="text-lg text-gray-500 dark:text-gray-400 mt-2">
-                Track habits, manage expenses, solve problems, and stay productive.
+        <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-purple-950/50 to-pink-950/50 relative overflow-hidden">
+          {/* Background Effects */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,_transparent_0deg,_rgba(168,85,247,0.1)_180deg,_transparent_360deg)] animate-spin-slow"></div>
+          
+          <div className="relative flex items-center justify-center min-h-screen">
+            <div className="text-center space-y-8 px-4 max-w-4xl mx-auto">
+              {/* Hero Section */}
+              <div className="animate-fadeInUp">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6">
+                  <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent animate-shimmer">
+                    DevLife
+                  </span>
+                </h1>
+                <p className="text-2xl md:text-3xl lg:text-4xl font-semibold text-zinc-300 mb-4">
+                  Your All-in-One Productivity Hub
+                </p>
+                <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                  Track habits, manage expenses, solve problems, and stay productive in one sleek interface.
+                </p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scaleIn" style={{animationDelay: '0.2s'}}>
+                <SignInButton mode="modal">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 hover:scale-105"
+                  >
+                    Sign In
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-2 border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-500 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105"
+                  >
+                    Sign Up
+                  </Button>
+                </SignUpButton>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Feature Highlights Section */}
+        <div className="bg-gradient-to-b from-zinc-950 to-zinc-900 py-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16 animate-fadeInUp">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+                Everything You Need to
+                <span className="bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent"> Succeed</span>
+              </h2>
+              <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
+                Powerful tools designed for modern developers and students
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <SignInButton mode="modal">
-                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
-                  Sign In
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button variant="outline" size="lg">
-                  Sign Up
-                </Button>
-              </SignUpButton>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Task Management Card */}
+              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover-lift hover-glow transition-all duration-300 animate-slideInRight" style={{animationDelay: '0.1s'}}>
+                <div className="text-4xl mb-4 text-emerald-400">📋</div>
+                <h3 className="text-xl font-bold text-white mb-3">Smart Task Tracking</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Organize academic and personal tasks with priorities, tags, and due dates. Never miss an important deadline again.
+                </p>
+              </div>
+              
+              {/* Habit Building Card */}
+              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover-lift hover-glow transition-all duration-300 animate-slideInRight" style={{animationDelay: '0.2s'}}>
+                <div className="text-4xl mb-4 text-orange-400">🔥</div>
+                <h3 className="text-xl font-bold text-white mb-3">Streak-based Habits</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Build lasting routines for gym, studies, and coding with visual streak tracking and motivational insights.
+                </p>
+              </div>
+              
+              {/* Finance & Progress Card */}
+              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover-lift hover-glow transition-all duration-300 animate-slideInRight" style={{animationDelay: '0.3s'}}>
+                <div className="text-4xl mb-4 text-blue-400">📊</div>
+                <h3 className="text-xl font-bold text-white mb-3">Track Progress</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Monitor your expenses and keep track of your problem-solving journey in one comprehensive dashboard.
+                </p>
+              </div>
             </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="bg-zinc-950 border-t border-zinc-800 py-8">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <p className="text-zinc-500 text-sm">
+              © 2024 DevLife. Built for productivity enthusiasts.
+            </p>
           </div>
         </div>
       </SignedOut>
@@ -851,6 +932,11 @@ export default function Dashboard() {
       </div>
       </div>
     </MainLayout>
+    
+    {/* Morning Sync Popup */}
+    {showMorningPopup && (
+      <MorningSyncPopup onDismiss={() => setShowMorningPopup(false)} />
+    )}
     </SignedIn>
     </>
   );

@@ -25,23 +25,22 @@ interface TaskCardProps {
 }
 
 const priorityColors = {
-  Low: 'text-green-400',
-  Medium: 'text-yellow-400',
-  High: 'text-orange-400',
-  Critical: 'text-red-400'
+  Low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  Medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  High: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  Critical: 'bg-red-500/20 text-red-400 border-red-500/30'
 };
 
 const categoryColors = {
-  Academic: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
-  Exam: 'bg-red-500/20 text-red-400 border-red-500/50',
-  Project: 'bg-purple-500/20 text-purple-400 border-purple-500/50',
-  Personal: 'bg-green-500/20 text-green-400 border-green-500/50'
+  Academic: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  Exam: 'bg-red-500/20 text-red-400 border-red-500/30',
+  Project: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  Personal: 'bg-green-500/20 text-green-400 border-green-500/30'
 };
 
 export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isSwiping, setIsSwiping] = useState(false);
 
   const handleToggle = () => {
     startTransition(async () => {
@@ -51,7 +50,6 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
           onRefresh();
         } else {
           console.error('Failed to toggle task status');
-          // Could show toast notification here
         }
       } catch (error) {
         console.error('Toggle error:', error);
@@ -68,7 +66,6 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
           const result = await deleteTask(task.id);
           if (result.success) {
             onRefresh();
-            // Could add toast notification here if available
           } else {
             alert('Failed to delete task. Please try again.');
             setIsDeleting(false);
@@ -100,106 +97,88 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
   return (
     <div
       className={cn(
-        'group relative bg-gray-900/50 border border-gray-700/50 rounded-xl p-4 sm:p-5 transition-all duration-300 hover-lift',
-        task.is_completed && 'opacity-60',
-        isSwiping && 'transform translate-x-2'
+        'group relative bg-gray-900/50 border border-gray-700/50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300',
+        task.is_completed && 'opacity-60'
       )}
     >
-      {/* Mobile action buttons - always visible */}
-      <div className="flex md:hidden items-center space-x-20 mt-4 pt-4 border-t border-gray-700/30 ">
-        <Button
-          size="sm"
-          onClick={() => onEdit(task)}
-          className="flex-1 h-8 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg touch-manipulation"
-        >
-          <Edit size={13} className="mr-1" />
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={handleDelete}
-          disabled={isPending || isDeleting}
-          className="flex-1 h-8 font-medium rounded-lg touch-manipulation"
-        >
-          <Trash2 size={13} className="mr-1" />
-          {isDeleting ? 'Deleting...' : 'Delete'}
-        </Button>
-      </div>
+      <div className="flex flex-row items-center p-3 sm:p-4">
+        {/* Left Side - Content Area */}
+        <div className="flex items-center flex-1 min-w-0">
+          {/* Checkbox - Vertically Centered */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggle}
+            disabled={isPending}
+            className="h-5 w-5 p-0 hover:bg-transparent touch-manipulation shrink-0 mr-3"
+          >
+            {task.is_completed ? (
+              <CheckSquare size={18} className="text-green-400" />
+            ) : (
+              <Square size={18} className="text-gray-400 hover:text-green-400" />
+            )}
+          </Button>
 
-      <div className="flex items-start space-x-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggle}
-          disabled={isPending}
-          className="mt-1 h-6 w-6 p-0 hover:bg-transparent touch-manipulation"
-        >
-          {task.is_completed ? (
-            <CheckSquare size={20} className="text-green-400" />
-          ) : (
-            <Square size={20} className="text-gray-400 hover:text-green-400" />
-          )}
-        </Button>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
+          {/* Task Details Container */}
+          <div className="flex-1 min-w-0">
+            {/* Task Title */}
             <h3 className={cn(
-              'font-bold text-lg text-white leading-tight pr-2',
+              'font-semibold text-sm sm:text-base text-white leading-tight mb-1 truncate',
               task.is_completed && 'line-through text-gray-400'
             )}>
               {task.title}
             </h3>
-            <span className={cn(
-              'text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap shrink-0',
-              categoryColors[task.category]
-            )}>
-              {task.category}
-            </span>
-          </div>
 
-          {task.description && (
-            <p className="text-sm text-gray-300 mb-3 line-clamp-2 leading-relaxed">
-              {task.description}
-            </p>
-          )}
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            {/* Metadata Row - Due Date, Priority Badge, Category Tag */}
+            <div className="flex items-center space-x-2 flex-wrap">
               {dueDateText && (
-                <div className="flex items-center space-x-1.5 text-sm text-gray-400">
-                  <Clock size={14} />
+                <div className="flex items-center space-x-1 text-xs text-gray-400">
+                  <Clock size={12} />
                   <span className="font-medium">{dueDateText}</span>
                 </div>
               )}
-              <span className={cn('text-xs font-semibold px-2 py-1 rounded-md bg-opacity-20', priorityColors[task.priority])}>
+              
+              <span className={cn(
+                'text-xs font-medium px-2 py-0.5 rounded-full border',
+                priorityColors[task.priority]
+              )}>
                 {task.priority}
               </span>
-            </div>
 
-            {/* Desktop action buttons */}
-            <div className="hidden md:flex items-center space-x-0.5">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onEdit(task)}
-                className="h-5 w-5 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded touch-manipulation"
-                title="Edit task"
-              >
-                <Edit size={10} />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleDelete}
-                disabled={isPending || isDeleting}
-                className="h-5 w-5 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded touch-manipulation"
-                title={isDeleting ? "Deleting..." : "Delete task"}
-              >
-                <Trash2 size={10} />
-              </Button>
+              <span className={cn(
+                'text-xs font-medium px-2 py-0.5 rounded-full border',
+                categoryColors[task.category]
+              )}>
+                {task.category}
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* Right Side - Action Area */}
+        <div className="flex items-center space-x-1 shrink-0 ml-2">
+          {/* Edit Icon Button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onEdit(task)}
+            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md touch-manipulation"
+            title="Edit task"
+          >
+            <Edit size={14} />
+          </Button>
+
+          {/* Delete Icon Button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDelete}
+            disabled={isPending || isDeleting}
+            className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-md touch-manipulation"
+            title={isDeleting ? "Deleting..." : "Delete task"}
+          >
+            <Trash2 size={14} />
+          </Button>
         </div>
       </div>
     </div>
