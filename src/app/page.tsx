@@ -99,42 +99,44 @@ const DashboardOverview = ({ data, dsaProblems, recentTransactions }: {
     {/* Bento Grid Layout */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
       {/* Row 1: Quick Stats */}
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-emerald-500/20 rounded-xl shadow-lg shadow-emerald-500/10 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-emerald-400">{data?.totalSolved || 0}</div>
+          <div className="text-3xl font-bold text-emerald-400" style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>{data?.totalSolved || 0}</div>
           <div className="text-zinc-400 text-sm">Total DSA</div>
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-rose-500/20 rounded-xl shadow-lg shadow-rose-500/10 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-rose-400">₹{(data?.totalDebt || 0).toFixed(0)}</div>
+          <div className="text-3xl font-bold text-rose-400" style={{ filter: 'drop-shadow(0 0 8px rgba(244,63,94,0.8))' }}>₹{(data?.totalDebt || 0).toFixed(0)}</div>
           <div className="text-zinc-400 text-sm">Total Udhaar</div>
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-green-500/20 rounded-xl shadow-lg shadow-green-500/10 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-green-400">₹{(data?.totalExpense || 0).toFixed(0)}</div>
+          <div className="text-3xl font-bold text-green-400" style={{ filter: 'drop-shadow(0 0 8px rgba(34,197,94,0.8))' }}>₹{(data?.totalExpense || 0).toFixed(0)}</div>
           <div className="text-zinc-400 text-sm">Total Expense</div>
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-blue-500/20 rounded-xl shadow-lg shadow-blue-500/10 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-blue-400">{data?.collegeAttendance?.presentDays || 0}</div>
+          <div className="text-3xl font-bold text-blue-400" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.8))' }}>{data?.collegeAttendance?.presentDays || 0}</div>
           <div className="text-zinc-400 text-sm">College Present</div>
         </CardContent>
       </Card>
 
       {/* Smoking Tracker - Full Width */}
       <div className="col-span-1 sm:col-span-2 lg:col-span-4">
-        <SmokingTracker />
+        <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 p-4">
+          <SmokingTracker />
+        </div>
       </div>
 
       {/* Row 3: Finance & Activity */}
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
-        <CardHeader className="border-b border-zinc-700/50">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 sm:col-span-2 lg:col-span-2">
+        <CardHeader className="border-b border-cyan-500/20">
           <CardTitle className="text-white flex items-center gap-2">
             <span className="text-rose-400">💰</span>
             Finance Overview
@@ -145,8 +147,8 @@ const DashboardOverview = ({ data, dsaProblems, recentTransactions }: {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-xl col-span-1 sm:col-span-2 lg:col-span-2">
-        <CardHeader className="border-b border-zinc-700/50">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 sm:col-span-2 lg:col-span-2">
+        <CardHeader className="border-b border-cyan-500/20">
           <CardTitle className="text-white flex items-center gap-2">
             <span className="text-blue-400">📝</span>
             Recent Activity
@@ -783,102 +785,191 @@ export default function Dashboard() {
   return (
     <>
       <SignedOut>
-        <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-purple-950/50 to-pink-950/50 relative overflow-hidden">
-          {/* Background Effects */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent"></div>
-          <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,_transparent_0deg,_rgba(168,85,247,0.1)_180deg,_transparent_360deg)] animate-spin-slow"></div>
-          
-          <div className="relative flex items-center justify-center min-h-screen">
-            <div className="text-center space-y-8 px-4 max-w-4xl mx-auto">
-              {/* Hero Section */}
-              <div className="animate-fadeInUp">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6">
-                  <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent animate-shimmer">
-                    DevLife
-                  </span>
-                </h1>
-                <p className="text-2xl md:text-3xl lg:text-4xl font-semibold text-zinc-300 mb-4">
-                  Your All-in-One Productivity Hub
-                </p>
-                <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                  Track habits, manage expenses, solve problems, and stay productive in one sleek interface.
-                </p>
+        <div className="min-h-screen bg-[#030014] relative overflow-hidden">
+          {/* Cosmic Background - Nebula Glows */}
+          <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[-100px] right-[-100px] w-[600px] h-[600px] bg-cyan-500/20 rounded-full blur-[150px]"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-pink-500/10 rounded-full blur-[100px]"></div>
+
+          {/* Fixed Navigation Bar */}
+          <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/50 border-b border-white/10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
+                  DevLife
+                </div>
+                <div className="flex items-center space-x-4">
+                  <SignInButton mode="modal">
+                    <button className="text-gray-300 hover:text-white transition-colors">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg">
+                      Get Started
+                    </Button>
+                  </SignUpButton>
+                </div>
               </div>
-              
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scaleIn" style={{animationDelay: '0.2s'}}>
-                <SignInButton mode="modal">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 hover:scale-105"
-                  >
-                    Sign In
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="border-2 border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-500 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105"
-                  >
-                    Sign Up
-                  </Button>
-                </SignUpButton>
+            </div>
+          </nav>
+
+          {/* Hero Section */}
+          <div className="relative pt-24 pb-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                {/* Left Column - Copy */}
+                <div className="space-y-8">
+                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight">
+                    Master Your Day.<br />
+                    <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
+                      Gamify Your Life.
+                    </span>
+                  </h1>
+                  <p className="text-xl text-gray-400 max-w-lg">
+                    The all-in-one productivity hub for developers. Track habits, crush tasks, and level up your career.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <SignUpButton mode="modal">
+                      <Button className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold shadow-lg">
+                        Get Started
+                      </Button>
+                    </SignUpButton>
+                  </div>
+                </div>
+
+                {/* Right Column - Floating UI Mockups */}
+                <div className="relative h-[600px] lg:h-[700px]">
+                  {/* Element A - Main Dashboard View (Foundation) */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-[90%] max-w-[500px] h-[350px] bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden">
+                    <div className="p-6">
+                      <div className="text-sm text-cyan-400 mb-4">DevLife Dashboard</div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-white text-sm">Productivity Trend</span>
+                          <span className="text-green-400 text-xs">+24%</span>
+                        </div>
+                        <div className="h-16 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded flex items-end justify-between px-2">
+                          {Array.from({ length: 7 }, (_, i) => (
+                            <div key={i} className="w-4 bg-cyan-400 rounded-t" style={{ height: `${20 + Math.random() * 40}px` }}></div>
+                          ))}
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-white text-xs">Complete project proposal</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <span className="text-white text-xs">Review code changes</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+                            <span className="text-white text-xs">Morning workout</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Element B - Habit Grid (Top-Left Satellite) */}
+                  <div className="absolute top-0 left-[-20px] lg:left-0 z-20 w-[220px] h-[180px] bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden -rotate-6 animate-float-slow">
+                    <div className="p-4">
+                      <div className="text-xs text-cyan-400 mb-2">Habit Grid</div>
+                      <div className="grid grid-cols-5 gap-1">
+                        {Array.from({ length: 30 }, (_, i) => (
+                          <div key={i} className={`w-3 h-3 rounded ${['bg-green-500', 'bg-pink-500', 'bg-purple-500', 'bg-cyan-500'][i % 4]}`}></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Element C - Gamification Badge (Bottom-Right Satellite) */}
+                  <div className="absolute bottom-10 right-[-20px] lg:right-0 z-30 w-[200px] h-[120px] bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden rotate-3 animate-float-medium">
+                    <div className="p-4 flex items-center justify-between h-full">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-cyan-400">Lv. 7</div>
+                        <div className="text-xs text-gray-400">Level Up!</div>
+                      </div>
+                      <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Element D - Analytics Widget (Top-Right Tiny Card) */}
+                  <div className="absolute top-10 right-10 z-0 w-[150px] h-[100px] bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden rotate-12">
+                    <div className="p-3 text-center">
+                      <div className="text-2xl font-bold text-green-400">+24%</div>
+                      <div className="text-xs text-gray-400">Weekly Completion Rate</div>
+                    </div>
+                  </div>
+
+                  {/* Element E - Overdue Task Alert (Floating element) */}
+                  <div className="absolute bottom-32 left-10 z-40 w-[260px] h-[60px] bg-red-950/70 backdrop-blur-xl border border-red-500/50 shadow-2xl rounded-2xl overflow-hidden -rotate-2 animate-float-fast">
+                    <div className="p-3 flex items-center space-x-2">
+                      <div className="text-red-400">⚠️</div>
+                      <div className="text-sm text-white">Overdue: Submit Project Proposal</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Feature Highlights Section */}
-        <div className="bg-gradient-to-b from-zinc-950 to-zinc-900 py-20 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16 animate-fadeInUp">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-                Everything You Need to
-                <span className="bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent"> Succeed</span>
-              </h2>
-              <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
-                Powerful tools designed for modern developers and students
+
+          {/* Features Grid */}
+          <div className="py-20 px-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                  Everything you need to stay
+                  <span className="bg-gradient-to-r from-pink-500 to-cyan-500 bg-clip-text text-transparent"> focused</span>
+                </h2>
+                <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                  Powerful tools designed for modern developers and students
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Habits Card */}
+                <div className="bg-gradient-to-b from-gray-900 to-black border border-purple-500/20 hover:border-purple-500/50 rounded-xl p-8 transition-all duration-300 hover:transform hover:scale-105">
+                  <div className="text-6xl mb-6">🔥</div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Github-style Habit Tracking</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    Build lasting routines with visual contribution graphs. Track daily streaks and watch your consistency grow.
+                  </p>
+                </div>
+
+                {/* Tasks Card */}
+                <div className="bg-gradient-to-b from-gray-900 to-black border border-cyan-500/20 hover:border-cyan-500/50 rounded-xl p-8 transition-all duration-300 hover:transform hover:scale-105">
+                  <div className="text-6xl mb-6">📋</div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Mission-Control Task Manager</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    Organize academic and personal tasks with smart prioritization. Never miss deadlines with intelligent reminders.
+                  </p>
+                </div>
+
+                {/* Gamification Card */}
+                <div className="bg-gradient-to-b from-gray-900 to-black border border-pink-500/20 hover:border-pink-500/50 rounded-xl p-8 transition-all duration-300 hover:transform hover:scale-105">
+                  <div className="text-6xl mb-6">⚡</div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Earn XP and Level Up</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    Turn productivity into a game. Earn experience points, unlock achievements, and level up your productivity.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-black/50 backdrop-blur-md border-t border-white/10 py-12">
+            <div className="max-w-7xl mx-auto px-4 text-center">
+              <p className="text-gray-500 text-sm">
+                © 2024 DevLife. Built for productivity enthusiasts.
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Task Management Card */}
-              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover-lift hover-glow transition-all duration-300 animate-slideInRight" style={{animationDelay: '0.1s'}}>
-                <div className="text-4xl mb-4 text-emerald-400">📋</div>
-                <h3 className="text-xl font-bold text-white mb-3">Smart Task Tracking</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Organize academic and personal tasks with priorities, tags, and due dates. Never miss an important deadline again.
-                </p>
-              </div>
-              
-              {/* Habit Building Card */}
-              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover-lift hover-glow transition-all duration-300 animate-slideInRight" style={{animationDelay: '0.2s'}}>
-                <div className="text-4xl mb-4 text-orange-400">🔥</div>
-                <h3 className="text-xl font-bold text-white mb-3">Streak-based Habits</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Build lasting routines for gym, studies, and coding with visual streak tracking and motivational insights.
-                </p>
-              </div>
-              
-              {/* Finance & Progress Card */}
-              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover-lift hover-glow transition-all duration-300 animate-slideInRight" style={{animationDelay: '0.3s'}}>
-                <div className="text-4xl mb-4 text-blue-400">📊</div>
-                <h3 className="text-xl font-bold text-white mb-3">Track Progress</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Monitor your expenses and keep track of your problem-solving journey in one comprehensive dashboard.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="bg-zinc-950 border-t border-zinc-800 py-8">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <p className="text-zinc-500 text-sm">
-              © 2024 DevLife. Built for productivity enthusiasts.
-            </p>
           </div>
         </div>
       </SignedOut>
@@ -889,10 +980,10 @@ export default function Dashboard() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent" style={{ filter: 'drop-shadow(0 0 10px rgba(0,243,255,0.6))' }}>
                   DevLife Dashboard
                 </h1>
-                <p className="text-zinc-400 mt-2 text-sm sm:text-base">{getGreeting()}! Ready to grind? 🚀</p>
+                <p className="text-cyan-400/80 mt-2 text-sm sm:text-base" style={{ textShadow: '0 0 5px #00f3ff' }}>{getGreeting()}! Ready to grind? 🚀</p>
               </div>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
@@ -905,22 +996,22 @@ export default function Dashboard() {
             </div>
 
             {/* Tab Toggle */}
-            <div className="flex gap-2">
+            <div className="bg-white/5 p-1 rounded-xl border border-white/10 flex gap-1">
               <Button
                 onClick={() => setActiveTab('overview')}
-                className={`flex-1 ${activeTab === 'overview' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-zinc-700 hover:bg-zinc-600'} text-white`}
+                className={`flex-1 rounded-lg transition-all ${activeTab === 'overview' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/20' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
               >
                 📊 Overview
               </Button>
               <Button
                 onClick={() => setActiveTab('actions')}
-                className={`flex-1 ${activeTab === 'actions' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-zinc-700 hover:bg-zinc-600'} text-white`}
+                className={`flex-1 rounded-lg transition-all ${activeTab === 'actions' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
               >
                 ✍️ Quick Actions
               </Button>
               <Button
                 onClick={() => router.push('/habit-grid')}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/20"
               >
                 🔥 Habit Tracker
               </Button>

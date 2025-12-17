@@ -26,8 +26,8 @@ interface TaskCardProps {
 
 const priorityColors = {
   Low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  Medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  High: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  Medium: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+  High: 'bg-red-500/10 text-red-400 border border-red-500/20',
   Critical: 'bg-red-500/20 text-red-400 border-red-500/30'
 };
 
@@ -97,7 +97,7 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
   return (
     <div
       className={cn(
-        'group relative bg-gray-900/50 border border-gray-700/50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300',
+        'group relative bg-gray-900/40 border border-white/5 rounded-xl mb-3 hover:border-cyan-500/30 hover:bg-gray-800/60 transition-all duration-300',
         task.is_completed && 'opacity-60'
       )}
     >
@@ -113,9 +113,9 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
             className="h-5 w-5 p-0 hover:bg-transparent touch-manipulation shrink-0 mr-3"
           >
             {task.is_completed ? (
-              <CheckSquare size={18} className="text-green-400" />
+              <CheckSquare size={18} className="text-green-400" style={{ filter: 'drop-shadow(0 0 10px #22c55e)' }} />
             ) : (
-              <Square size={18} className="text-gray-400 hover:text-green-400" />
+              <Square size={18} className="text-gray-400 hover:text-green-400 border border-gray-500 bg-transparent" />
             )}
           </Button>
 

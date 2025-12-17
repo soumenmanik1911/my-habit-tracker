@@ -108,8 +108,8 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Task Manager</h1>
-            <p className="text-sm text-gray-400">Stay organized with your academic and personal tasks</p>
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500" style={{ filter: 'drop-shadow(0 0 10px rgba(0,243,255,0.5))' }}>Task Manager</h1>
+            <p className="text-sm text-cyan-400/80" style={{ textShadow: '0 0 5px #00f3ff' }}>Stay organized with your academic and personal tasks</p>
           </div>
           <Button
             onClick={() => setAddDialogOpen(true)}
@@ -121,15 +121,15 @@ export default function TasksPage() {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-700/50">
-          <nav className="flex space-x-8" aria-label="Tabs">
+        <div className="bg-black/40 p-1 rounded-lg border border-white/10">
+          <nav className="flex" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
-                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                'flex-1 py-2 px-4 rounded-md font-medium text-sm transition-all',
                 activeTab === 'tasks'
-                  ? 'border-pink-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               )}
             >
               <CheckSquare size={16} className="inline mr-2" />
@@ -138,10 +138,10 @@ export default function TasksPage() {
             <button
               onClick={() => setActiveTab('analytics')}
               className={cn(
-                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                'flex-1 py-2 px-4 rounded-md font-medium text-sm transition-all',
                 activeTab === 'analytics'
-                  ? 'border-pink-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               )}
             >
               <BarChart3 size={16} className="inline mr-2" />
@@ -155,9 +155,9 @@ export default function TasksPage() {
           <div className="space-y-6">
           {/* Overdue Tasks */}
           {overdue.length > 0 && (
-            <Card className="bg-red-900/20 border-red-500/50">
+            <Card className="bg-red-950/30 backdrop-blur-md border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]">
               <CardHeader>
-                <CardTitle className="text-red-400 flex items-center">
+                <CardTitle className="text-red-400 flex items-center" style={{ textShadow: '0 0 10px #ef4444' }}>
                   <CheckSquare size={20} className="mr-2" />
                   Overdue ({overdue.length})
                 </CardTitle>
@@ -179,7 +179,7 @@ export default function TasksPage() {
 
           {/* Today's Tasks */}
           {today.length > 0 && (
-            <Card className="bg-green-900/20 border-green-500/50">
+            <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20">
               <CardHeader>
                 <CardTitle className="text-green-400 flex items-center">
                   <CheckSquare size={20} className="mr-2" />
@@ -203,7 +203,7 @@ export default function TasksPage() {
 
           {/* Upcoming Tasks */}
           {upcoming.length > 0 && (
-            <Card className="bg-gray-900/50 border-gray-700/50">
+            <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20">
               <CardHeader>
                 <CardTitle className="text-gray-300 flex items-center">
                   <CheckSquare size={20} className="mr-2" />
@@ -227,7 +227,7 @@ export default function TasksPage() {
 
           {/* Empty State */}
           {overdue.length === 0 && today.length === 0 && upcoming.length === 0 && (
-            <Card className="bg-gray-900/50 border-gray-700/50">
+            <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20">
               <CardContent className="text-center py-12">
                 <div className="text-6xl mb-4">🎯</div>
                 <h3 className="text-xl font-semibold text-white mb-2">All caught up!</h3>
@@ -245,7 +245,7 @@ export default function TasksPage() {
 
           {/* Empty State for Today's Tasks specifically */}
           {today.length === 0 && (overdue.length > 0 || upcoming.length > 0) && (
-            <Card className="bg-green-900/10 border-green-500/30">
+            <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20">
               <CardContent className="text-center py-8">
                 <div className="text-4xl mb-3">✅</div>
                 <h4 className="text-lg font-semibold text-green-400 mb-1">No tasks due today</h4>

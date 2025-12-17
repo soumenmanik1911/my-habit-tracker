@@ -292,7 +292,7 @@ export default function HabitGridPage() {
           <h1 className="text-4xl font-bold text-white mb-2 neon-glitch animate-flicker tracking-widest">
             Habit Command Center
           </h1>
-          <p className="text-lg text-cyan-400" style={{ textShadow: '0 0 10px #00f3ff' }}>Cyberpunk Dashboard • GitHub Contributions Reimagined</p>
+         
         </div>
 
         {/* Gamification HUD */}
