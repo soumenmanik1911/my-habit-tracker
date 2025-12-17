@@ -56,6 +56,10 @@ CREATE TABLE HealthTracker (
 
 ALTER TABLE HealthTracker ADD COLUMN IF NOT EXISTS college_attendance BOOLEAN DEFAULT NULL;
 
+-- Add new columns to Habits table if they don't exist
+ALTER TABLE Habits ADD COLUMN IF NOT EXISTS color VARCHAR(7) DEFAULT '#10b981';
+ALTER TABLE Habits ADD COLUMN IF NOT EXISTS icon VARCHAR(100) DEFAULT 'Target';
+
 CREATE TABLE GymAttendance (
     id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -133,5 +137,30 @@ CREATE TABLE DailyStats (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, date)
 );
+
+-- Habit Grid Tables
+CREATE TABLE Habits (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    goal INTEGER NOT NULL DEFAULT 1,
+    icon VARCHAR(100) DEFAULT 'Target',
+    color VARCHAR(7) DEFAULT '#10b981', -- Hex color
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE HabitLogs (
+    id SERIAL PRIMARY KEY,
+    habit_id INTEGER NOT NULL REFERENCES Habits(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(habit_id, date)
+);
+
+CREATE INDEX idx_habit_logs_habit_id ON HabitLogs(habit_id);
+CREATE INDEX idx_habit_logs_date ON HabitLogs(date);
 
 -- Note: No initial inserts for UserSettings and HabitStreaks as they are now per-user

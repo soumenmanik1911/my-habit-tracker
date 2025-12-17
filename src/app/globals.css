@@ -342,3 +342,72 @@
     transform: translate(6px, 0);
   }
 }
+
+/* Cyberpunk Neon Effects */
+.neon-glitch {
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px #00f3ff,
+    0 0 20px #bc13fe;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-flicker {
+  animation: flicker 0.15s ease-in-out infinite;
+}
+
+/* Arc Reactor */
+.arc-reactor {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #050505 20%, #00f3ff 50%, #050505 80%);
+  box-shadow: 0 0 20px #00f3ff, 0 0 40px #00f3ff, 0 0 60px #00f3ff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.arc-reactor::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border-radius: 50%;
+  border: 2px dashed #00f3ff;
+  animation: spin 3s linear infinite;
+}
+
+.arc-reactor::after {
+  content: attr(data-level);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 10px #00f3ff;
+}
+
+/* Plasma Conduit */
+.plasma-conduit {
+  background: repeating-linear-gradient(90deg, #ff00ff 0%, #ff00ff 20%, #bc13fe 20%, #bc13fe 40%);
+  background-size: 40px 100%;
+  animation: flow 1s linear infinite;
+  box-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
+  transform: skewX(-12deg);
+}
+
+@keyframes flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 40px 50%; }
+}

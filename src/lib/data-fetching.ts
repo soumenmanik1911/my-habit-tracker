@@ -41,6 +41,25 @@ export interface HabitStreak {
   lastUpdated: string;
 }
 
+export interface Habit {
+  id: number;
+  name: string;
+  goal: number;
+  icon: string;
+  color: string;
+  history: boolean[];
+}
+
+export interface HabitAnalytics {
+  consistencyTrend: { date: string; completionRate: number }[];
+  distribution: { day: number; completed: number }[];
+  summaryStats: {
+    currentStreak: number;
+    totalActiveHabits: number;
+    completionRate: number;
+  };
+}
+
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
   const today = new Date().toISOString().split('T')[0];
 
@@ -314,4 +333,185 @@ export async function getDSAProblemStats(userId: string) {
     difficulty: row.difficulty,
     count: parseInt(row.count?.toString() || '0'),
   }));
+}
+
+export async function getHabits(userId: string): Promise<Habit[]> {
+  const habits = await sql`
+    SELECT h.id, h.name, h.goal, h.icon, h.color
+    FROM Habits h
+    WHERE h.user_id = ${userId}
+    ORDER BY h.created_at ASC
+  `;
+
+  const habitsWithHistory = await Promise.all(
+    habits.map(async (habit: any) => {
+      const logs = await sql`
+        SELECT TO_CHAR(date, 'YYYY-MM-DD') as date, completed
+        FROM HabitLogs
+        WHERE habit_id = ${habit.id}
+        ORDER BY date ASC
+      `;
+
+      const history: boolean[] = [];
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(currentYear, currentMonth, day);
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const log = logs.find((l: any) => l.date === dateStr);
+        history.push(log?.completed || false);
+      }
+
+      return {
+        id: parseInt(habit.id?.toString()),
+        name: habit.name,
+        goal: parseInt(habit.goal?.toString()),
+        icon: habit.icon || 'Target',
+        color: habit.color || '#10b981',
+        history,
+      };
+    })
+  );
+
+  return habitsWithHistory;
+}
+
+export async function createHabit(userId: string, name: string, goal: number, icon: string, color: string): Promise<Habit> {
+  const result = await sql`
+    INSERT INTO Habits (user_id, name, goal, icon, color)
+    VALUES (${userId}, ${name}, ${goal}, ${icon}, ${color})
+    RETURNING id, name, goal, icon, color
+  `;
+
+  const habit = result[0];
+  return {
+    id: parseInt(habit.id?.toString()),
+    name: habit.name,
+    goal: parseInt(habit.goal?.toString()),
+    icon: habit.icon || 'Target',
+    color: habit.color || '#10b981',
+    history: new Array(31).fill(false), // Empty history for new habit
+  };
+}
+
+export async function updateHabit(userId: string, id: number, name: string, goal: number, icon: string, color: string): Promise<void> {
+  await sql`
+    UPDATE Habits
+    SET name = ${name}, goal = ${goal}, icon = ${icon}, color = ${color}, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id} AND user_id = ${userId}
+  `;
+}
+
+export async function deleteHabit(userId: string, id: number): Promise<void> {
+  await sql`
+    DELETE FROM Habits
+    WHERE id = ${id} AND user_id = ${userId}
+  `;
+}
+
+export async function toggleHabitLog(userId: string, habitId: number, date: string, completed: boolean): Promise<void> {
+  // Verify habit belongs to user
+  const habitCheck = await sql`
+    SELECT id FROM Habits WHERE id = ${habitId} AND user_id = ${userId}
+  `;
+  if (habitCheck.length === 0) {
+    throw new Error('Habit not found');
+  }
+
+  await sql`
+    INSERT INTO HabitLogs (habit_id, date, completed, updated_at)
+    VALUES (${habitId}, ${date}, ${completed}, CURRENT_TIMESTAMP)
+    ON CONFLICT (habit_id, date)
+    DO UPDATE SET completed = ${completed}, updated_at = CURRENT_TIMESTAMP
+  `;
+}
+
+export async function getHabitAnalytics(userId: string): Promise<HabitAnalytics> {
+  const habits = await getHabits(userId);
+  if (habits.length === 0) {
+    return {
+      consistencyTrend: [],
+      distribution: [],
+      summaryStats: { currentStreak: 0, totalActiveHabits: 0, completionRate: 0 },
+    };
+  }
+
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  // Consistency Trend: Last 30 days completion rate
+  const consistencyTrend = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(now.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    let totalCompleted = 0;
+    let totalHabits = 0;
+
+    for (const habit of habits) {
+      const dayIndex = date.getDate() - 1; // 0-based
+      if (dayIndex >= 0 && dayIndex < habit.history.length) {
+        totalHabits++;
+        if (habit.history[dayIndex]) totalCompleted++;
+      }
+    }
+
+    const completionRate = totalHabits > 0 ? (totalCompleted / totalHabits) * 100 : 0;
+    consistencyTrend.push({ date: dateStr, completionRate });
+  }
+
+  // Distribution: Habits completed per day of month
+  const distribution = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    let completed = 0;
+    for (const habit of habits) {
+      if (day <= habit.history.length && habit.history[day - 1]) {
+        completed++;
+      }
+    }
+    distribution.push({ day, completed });
+  }
+
+  // Summary Stats
+  const totalActiveHabits = habits.length;
+  const totalPossible = habits.reduce((sum, h) => sum + h.history.length, 0);
+  const totalCompleted = habits.reduce((sum, h) => sum + h.history.filter(Boolean).length, 0);
+  const completionRate = totalPossible > 0 ? (totalCompleted / totalPossible) * 100 : 0;
+
+  // Current Streak: Consecutive days where at least one habit was completed
+  let currentStreak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) { // Check up to a year back
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    let dayCompleted = false;
+    for (const habit of habits) {
+      const habitMonth = new Date().getMonth();
+      const habitYear = new Date().getFullYear();
+      if (month === habitMonth && year === habitYear && day <= habit.history.length && habit.history[day - 1]) {
+        dayCompleted = true;
+        break;
+      }
+    }
+
+    if (dayCompleted) {
+      currentStreak++;
+    } else if (i > 0) { // Don't break on today if not completed
+      break;
+    }
+  }
+
+  return {
+    consistencyTrend,
+    distribution,
+    summaryStats: { currentStreak, totalActiveHabits, completionRate },
+  };
 }

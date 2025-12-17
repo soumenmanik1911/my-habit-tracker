@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { addProblem } from '@/actions/dsa';
 import { addExpense, deleteExpense } from '@/actions/expenses';
 import { updateAttendance } from '@/actions/attendance';
@@ -477,6 +478,7 @@ export default function Dashboard() {
 
   // Tab state
   const [activeTab, setActiveTab] = useState('overview');
+  const router = useRouter();
 
   // DSA state
   const [dsaProblems, setDsaProblems] = useState<Problem[]>([]);
@@ -915,6 +917,12 @@ export default function Dashboard() {
                 className={`flex-1 ${activeTab === 'actions' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-zinc-700 hover:bg-zinc-600'} text-white`}
               >
                 ✍️ Quick Actions
+              </Button>
+              <Button
+                onClick={() => router.push('/habit-grid')}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                🔥 Habit Tracker
               </Button>
             </div>
 
