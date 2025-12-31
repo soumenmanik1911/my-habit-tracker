@@ -33,8 +33,8 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
   // Initialize form when note changes
   useEffect(() => {
     if (note) {
-      setTitle(note.title);
-      setContent(note.content);
+      setTitle(note.title || '');
+      setContent(note.content || ''); // Ensure content is never null
       setTags(note.tags || []);
     } else {
       setTitle('');
@@ -42,6 +42,31 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
       setTags([]);
     }
   }, [note]);
+
+  // CRITICAL FIX: State initialization and reset during auth transitions
+  useEffect(() => {
+    // Force state initialization when component mounts or isOpen changes
+    if (isOpen) {
+      // Ensure all state variables are properly initialized
+      setTitle(prev => prev || '');
+      setContent(prev => prev || ''); // Never allow null/undefined
+      setTags(prev => prev || []);
+      setIsPreviewMode(false);
+      setIsSaving(false);
+      setIsGenerating(false);
+      setIsRefactoring(false);
+      setNewTag('');
+      setIsTagsPanelOpen(false);
+    }
+  }, [isOpen]);
+
+  // Additional safety: monitor content state and fix null/undefined values
+  useEffect(() => {
+    if (content === null || content === undefined) {
+      console.warn('[STATE_FIX] Content state was null/undefined, resetting to empty string');
+      setContent('');
+    }
+  }, [content]);
 
   // Speech recognition for voice typing
   const {
@@ -56,7 +81,8 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
       if (contentRef.current) {
         const start = contentRef.current.selectionStart;
         const end = contentRef.current.selectionEnd;
-        const newContent = content.substring(0, start) + newTranscript + content.substring(end);
+        const safeContent = content || ''; // Ensure content is never null
+        const newContent = safeContent.substring(0, start) + newTranscript + safeContent.substring(end);
         setContent(newContent);
         
         // Move cursor to end of inserted text
@@ -104,6 +130,10 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
     const selectedText = window.getSelection()?.toString() || '';
     
     try {
+      // CRITICAL FIX: Ensure content is always a valid string
+      const safeContent = content || '';
+      console.log('[AI_ASSIST] Content state:', { content, safeContent, type: typeof content, action });
+      
       const response = await fetch('/api/notes/ai-assist', {
         method: 'POST',
         headers: {
@@ -111,7 +141,7 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
         },
         body: JSON.stringify({
           action,
-          content,
+          content: safeContent, // Always ensure we send a string
           selectedText,
           noteId: note?.id,
         }),
@@ -125,13 +155,13 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
           if (contentRef.current) {
             const start = contentRef.current.selectionStart;
             const end = contentRef.current.selectionEnd;
-            const newContent = content.substring(0, start) + data.result + content.substring(end);
+            const newContent = safeContent.substring(0, start) + data.result + safeContent.substring(end);
             setContent(newContent);
           }
         } else {
           // Replace selected text or entire content
           if (selectedText) {
-            const newContent = content.replace(selectedText, data.result);
+            const newContent = safeContent.replace(selectedText, data.result);
             setContent(newContent);
           } else {
             setContent(data.result);
@@ -156,46 +186,85 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
 
     setIsGenerating(true);
     try {
+      console.log('[AI_GENERATE] Starting generation for title:', title.trim());
+      
+      // CRITICAL FIX: Ensure content is always a valid string
+      // Handle null/undefined state after authentication transitions
+      const safeContent = content || '';
+      
+      console.log('[AI_GENERATE] === CLIENT SIDE DEBUG ===');
+      console.log('[AI_GENERATE] Title:', JSON.stringify(title));
+      console.log('[AI_GENERATE] Title type:', typeof title);
+      console.log('[AI_GENERATE] Title length:', title?.length || 0);
+      console.log('[AI_GENERATE] Content:', JSON.stringify(content));
+      console.log('[AI_GENERATE] Content type:', typeof content);
+      console.log('[AI_GENERATE] Content null check:', content === null);
+      console.log('[AI_GENERATE] Content undefined check:', content === undefined);
+      console.log('[AI_GENERATE] SafeContent:', JSON.stringify(safeContent));
+      console.log('[AI_GENERATE] SafeContent length:', safeContent.length);
+      
+      const requestBody = {
+        action: 'generate_content_from_title',
+        title: title.trim(),
+        content: safeContent,
+        noteId: note?.id,
+      };
+      
+      console.log('[AI_GENERATE] Request body:', requestBody);
+      console.log('[AI_GENERATE] Request body content field:', JSON.stringify(requestBody.content));
+      
       const response = await fetch('/api/notes/ai-assist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          action: 'generate_content_from_title',
-          title: title.trim(),
-          content,
-          noteId: note?.id,
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      console.log('[AI_GENERATE] Response status:', response.status);
+      console.log('[AI_GENERATE] Response ok:', response.ok);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[AI_GENERATE] Response data:', data);
         
-        // Typewriter effect for content insertion
-        await typewriterEffect(data.result);
-        
-        // Auto-focus the textarea
-        setTimeout(() => {
-          if (contentRef.current) {
-            contentRef.current.focus();
-          }
-        }, 100);
-        
-        addToast({
-          type: 'success',
-          title: 'Content Generated',
-          message: 'AI has generated content based on your title.',
-        });
+        if (data.result) {
+          // Typewriter effect for content insertion
+          await typewriterEffect(data.result);
+          
+          // Auto-focus the textarea
+          setTimeout(() => {
+            if (contentRef.current) {
+              contentRef.current.focus();
+            }
+          }, 100);
+          
+          addToast({
+            type: 'success',
+            title: 'Content Generated',
+            message: 'AI has generated content based on your title.',
+          });
+        } else {
+          throw new Error('No content generated');
+        }
       } else {
-        throw new Error('Failed to generate content');
+        // Try to get error details from response
+        let errorMessage = 'Failed to generate content';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error('[AI_GENERATE] API Error:', errorData);
+        } catch (parseError) {
+          console.error('[AI_GENERATE] Failed to parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('AI generation error:', error);
+      console.error('[AI_GENERATE] AI generation error:', error);
       addToast({
         type: 'error',
         title: 'Generation Failed',
-        message: 'Failed to generate content. Try again.',
+        message: error instanceof Error ? error.message : 'Failed to generate content. Try again.',
       });
     } finally {
       setIsGenerating(false);
@@ -204,23 +273,35 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
 
   // Typewriter effect for content insertion
   const typewriterEffect = async (text: string) => {
+    if (!text || typeof text !== 'string') {
+      console.warn('[TYPEWRITER] Invalid text provided:', text);
+      return;
+    }
+    
     setContent('');
     const words = text.split(' ');
     let currentContent = '';
     
-    for (let i = 0; i < words.length; i++) {
-      currentContent += (i > 0 ? ' ' : '') + words[i];
-      setContent(currentContent);
-      
-      // Small delay between words for typewriter effect
-      await new Promise(resolve => setTimeout(resolve, 50));
+    try {
+      for (let i = 0; i < words.length; i++) {
+        currentContent += (i > 0 ? ' ' : '') + words[i];
+        setContent(currentContent);
+        
+        // Small delay between words for typewriter effect
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+    } catch (error) {
+      console.error('[TYPEWRITER] Error during typewriter effect:', error);
+      // Fallback: set content directly
+      setContent(text);
     }
   };
 
   // Refactor Note - Chaos to Clarity
   const handleRefactor = async () => {
     // Step 1: Validation Check
-    if (!content.trim()) {
+    const safeContent = content || '';
+    if (!safeContent.trim()) {
       addToast({
         type: 'warning',
         title: 'No Content',
@@ -232,9 +313,9 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
     setIsRefactoring(true);
     
     // Step 3: Debugging Log
-    console.log('Sending text to AI:', content);
-    console.log('Content length:', content.length);
-    console.log('Content preview:', content.substring(0, 100) + '...');
+    console.log('Sending text to AI:', safeContent);
+    console.log('Content length:', safeContent.length);
+    console.log('Content preview:', safeContent.substring(0, 100) + '...');
     
     try {
       const response = await fetch('/api/notes/ai-assist', {
@@ -244,8 +325,8 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
         },
         body: JSON.stringify({
           action: 'refactor_note',
-          rawText: content.trim(),
-          content: content.trim(), // Also send as content for compatibility
+          rawText: safeContent.trim(),
+          content: safeContent.trim(), // Also send as content for compatibility
           noteId: note?.id,
         }),
       });

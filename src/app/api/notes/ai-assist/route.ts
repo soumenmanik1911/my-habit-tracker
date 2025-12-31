@@ -5,65 +5,117 @@ import sql from '@/db/index';
 // POST /api/notes/ai-assist - AI copilot features for notes
 export async function POST(request: NextRequest) {
   try {
+    console.log('[AI_ASSIST] === STARTING REQUEST ===');
+    
     const { userId } = await auth();
+    console.log('[AI_ASSIST] User ID:', userId);
+    
     if (!userId) {
+      console.log('[AI_ASSIST] Unauthorized - no user ID');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { action, content, selectedText = '', noteId, title = '', rawText = '' } = await request.json();
+    const requestBody = await request.json();
+    console.log('[AI_ASSIST] Request body:', requestBody);
+    
+    const { action, content, selectedText = '', noteId, title = '', rawText = '' } = requestBody;
+
+    // CRITICAL FIX: Ensure content is always a valid string
+    // Handle null/undefined values from client-side state initialization issues
+    const safeContent = content || '';
+    const safeRawText = rawText || '';
+    const safeSelectedText = selectedText || '';
+    
+    console.log('[AI_ASSIST] === COMPREHENSIVE DEBUG ===');
+    console.log('[AI_ASSIST] Request validation:', {
+      action,
+      originalContent: content,
+      originalContentType: typeof content,
+      originalContentNull: content === null,
+      originalContentUndefined: content === undefined,
+      safeContent,
+      safeContentType: typeof safeContent,
+      safeContentLength: safeContent.length,
+      title,
+      titleLength: title?.length || 0,
+      noteId,
+      timestamp: new Date().toISOString()
+    });
 
     // Debug logging
     console.log('=== AI ASSIST DEBUG ===');
     console.log('Action:', action);
-    console.log('Content length:', content?.length || 0);
-    console.log('RawText length:', rawText?.length || 0);
-    console.log('Content preview:', content?.substring(0, 100) + '...');
-    console.log('RawText preview:', rawText?.substring(0, 100) + '...');
+    console.log('Safe Content length:', safeContent?.length || 0);
+    console.log('Safe RawText length:', safeRawText?.length || 0);
+    console.log('Content preview:', safeContent?.substring(0, 100) + '...');
+    console.log('RawText preview:', safeRawText?.substring(0, 100) + '...');
     
-    // Validation - for refactor_note, we need either content or rawText
+    // Validation - for most actions, content is required unless it's generate_content_from_title
     if (!action) {
+      console.log('[AI_ASSIST] Missing action');
       return NextResponse.json({ error: 'Action is required' }, { status: 400 });
     }
     
-    if (action !== 'refactor_note' && !content) {
+    // CRITICAL FIX: Only require content for actions that actually need it
+    // generate_content_from_title doesn't need content since it generates from title alone
+    if (action !== 'refactor_note' && action !== 'generate_content_from_title' && !safeContent) {
+      console.log('[AI_ASSIST] Missing content for action:', action);
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
     
-    if (action === 'refactor_note' && !content && !rawText) {
+    if (action === 'refactor_note' && !safeRawText && !safeContent) {
+      console.log('[AI_ASSIST] Missing content and rawText for refactor_note');
       return NextResponse.json({ error: 'Content or rawText is required for refactoring' }, { status: 400 });
     }
 
+    console.log('[AI_ASSIST] ✅ VALIDATION PASSED');
+    console.log('[AI_ASSIST] Ready to process action:', action, 'with safeContent length:', safeContent.length);
+
     let result = '';
+    console.log('[AI_ASSIST] Processing action:', action);
 
     switch (action) {
       case 'fix_grammar':
-        result = await fixGrammar(selectedText || content);
+        result = await fixGrammar(safeSelectedText || safeContent);
         break;
       
       case 'generate_code':
-        result = await generateCode(selectedText || content);
+        result = await generateCode(safeSelectedText || safeContent);
         break;
       
       case 'summarize':
-        result = await summarizeContent(content);
+        result = await summarizeContent(safeContent);
         break;
       
       case 'generate_content_from_title':
+        console.log('[AI_ASSIST] 🔄 Processing generate_content_from_title');
+        console.log('[AI_ASSIST] Title received:', JSON.stringify(title));
+        console.log('[AI_ASSIST] Title type:', typeof title);
+        console.log('[AI_ASSIST] Title length:', title?.length || 0);
+        console.log('[AI_ASSIST] Safe content (should be empty):', JSON.stringify(safeContent));
+        
         result = await generateContentFromTitle(title);
+        
+        console.log('[AI_ASSIST] ✅ generateContentFromTitle completed');
+        console.log('[AI_ASSIST] Generated result length:', result?.length || 0);
+        console.log('[AI_ASSIST] Generated result preview:', result?.substring(0, 100) + '...');
         break;
       
       case 'refactor_note':
-        result = await refactorNote(rawText || content);
+        result = await refactorNote(safeRawText || safeContent);
         break;
       
       default:
+        console.log('[AI_ASSIST] Invalid action:', action);
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
+
+    console.log('[AI_ASSIST] Action completed successfully, result length:', result.length);
 
     // If noteId is provided, we could optionally save the AI result to the database
     if (noteId && (action === 'summarize')) {
       // Add summary to the top of the note content
-      const updatedContent = `${result}\n\n---\n\n${content}`;
+      const updatedContent = `${result}\n\n---\n\n${safeContent}`;
       
       await sql`
         UPDATE notes 
@@ -72,10 +124,20 @@ export async function POST(request: NextRequest) {
       `;
     }
 
-    return NextResponse.json({ result, action });
+    const response = NextResponse.json({ result, action });
+    console.log('[AI_ASSIST] === REQUEST COMPLETED SUCCESSFULLY ===');
+    return response;
   } catch (error) {
-    console.error('Error in AI assist:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[AI_ASSIST] === ERROR OCCURRED ===');
+    console.error('Error details:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
 
@@ -155,18 +217,24 @@ async function summarizeContent(content: string): Promise<string> {
 
 // Content generation from title function
 async function generateContentFromTitle(title: string): Promise<string> {
+  console.log('[AI_GENERATE] generateContentFromTitle called with:', title);
+  
   // This is a simplified implementation
   // In a real app, you'd integrate with a proper AI content generation API
   
   if (!title || title.trim().length === 0) {
+    console.log('[AI_GENERATE] No title provided');
     return 'Please provide a title to generate content.';
   }
 
-  const lowerTitle = title.toLowerCase();
+  const cleanTitle = title.trim();
+  console.log('[AI_GENERATE] Clean title:', cleanTitle);
+  const lowerTitle = cleanTitle.toLowerCase();
   
-  // Java programming
-  if (lowerTitle.includes('java') && lowerTitle.includes('sort')) {
-    return `# ${title}
+  try {
+    // Java programming
+    if (lowerTitle.includes('java') && lowerTitle.includes('sort')) {
+      return `# ${cleanTitle}
 
 ## Overview
 This Java program demonstrates how to sort an array using different sorting algorithms.
@@ -196,11 +264,11 @@ public class ArraySorter {
 
 ## Usage
 Compile and run the program to see the sorting in action.`;
-  }
-  
-  // JavaScript/React
-  if ((lowerTitle.includes('react') || lowerTitle.includes('javascript')) && lowerTitle.includes('component')) {
-    return `# ${title}
+    }
+    
+    // JavaScript/React
+    if ((lowerTitle.includes('react') || lowerTitle.includes('javascript')) && lowerTitle.includes('component')) {
+      return `# ${cleanTitle}
 
 ## Overview
 This React component demonstrates best practices for building reusable UI components.
@@ -238,11 +306,11 @@ export default MyComponent;
 - Use descriptive prop names
 - Keep components focused and reusable
 - Handle loading and error states`;
-  }
-  
-  // Python
-  if (lowerTitle.includes('python') && (lowerTitle.includes('function') || lowerTitle.includes('script'))) {
-    return `# ${title}
+    }
+    
+    // Python
+    if (lowerTitle.includes('python') && (lowerTitle.includes('function') || lowerTitle.includes('script'))) {
+      return `# ${cleanTitle}
 
 ## Overview
 This Python script demonstrates clean code practices and proper function structure.
@@ -277,14 +345,14 @@ if __name__ == "__main__":
 - Clear documentation
 - Proper error handling
 - Main execution guard`;
-  }
-  
-  // API/Tutorial content
-  if (lowerTitle.includes('api') || lowerTitle.includes('tutorial') || lowerTitle.includes('guide')) {
-    return `# ${title}
+    }
+    
+    // API/Tutorial content
+    if (lowerTitle.includes('api') || lowerTitle.includes('tutorial') || lowerTitle.includes('guide')) {
+      return `# ${cleanTitle}
 
 ## Introduction
-This guide provides a comprehensive overview of ${title.toLowerCase()}.
+This guide provides a comprehensive overview of ${lowerTitle}.
 
 ## Prerequisites
 - Basic understanding of the topic
@@ -312,12 +380,12 @@ Deploy your solution following best practices.
 - Consider security implications
 
 ## Conclusion
-This ${title.toLowerCase()} provides a solid foundation for your project. Remember to iterate and improve based on feedback.`;
-  }
-  
-  // Default content generation
-  const topic = title.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-  return `# ${title}
+This ${lowerTitle} provides a solid foundation for your project. Remember to iterate and improve based on feedback.`;
+    }
+    
+    // Default content generation
+    const topic = cleanTitle.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    return `# ${cleanTitle}
 
 ## Overview
 This document covers ${topic.toLowerCase()} and provides practical insights.
@@ -352,6 +420,10 @@ This document covers ${topic.toLowerCase()} and provides practical insights.
 
 ## Conclusion
 This ${topic.toLowerCase()} serves as a starting point. Continue learning and improving your skills.`;
+  } catch (error) {
+    console.error('[AI_GENERATE] Error in generateContentFromTitle:', error);
+    throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 // Note refactoring function - Chaos to Clarity
