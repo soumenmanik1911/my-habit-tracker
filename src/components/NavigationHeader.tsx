@@ -137,7 +137,7 @@ export function NavigationHeader() {
             </SignedIn>
 
             {/* Mobile menu button - links to menu page */}
-            <Link href="/menu" className="md:hidden">
+            <Link href="/mobile-menu" className="md:hidden">
               <Button
                 variant="ghost"
                 size="sm"
@@ -151,7 +151,11 @@ export function NavigationHeader() {
       </header>
 
       {/* Quick Add Task Dialog */}
-      <AddTaskDialog onRefresh={() => {/* Refresh tasks when dialog closes */}} />
+      <AddTaskDialog
+        open={taskDialogOpen}
+        onOpenChange={setTaskDialogOpen}
+        onRefresh={() => {/* Refresh tasks when dialog closes */}}
+      />
     </>
   );
 }

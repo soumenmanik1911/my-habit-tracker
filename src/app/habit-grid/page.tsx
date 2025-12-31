@@ -86,28 +86,31 @@ const getLocalDateString = (date: Date) => {
 };
 
 export default function HabitGridPage() {
-   const [habits, setHabits] = useState<Habit[]>([]);
-   const [analytics, setAnalytics] = useState<HabitAnalytics | null>(null);
-   const [loading, setLoading] = useState(true);
-   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
-   const [habitForm, setHabitForm] = useState({
-     name: '',
-     goal: 1,
-     icon: 'Target',
-     color: '#10b981'
-   });
-   const now = new Date();
-   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const [habits, setHabits] = useState<Habit[]>([]);
+    const [analytics, setAnalytics] = useState<HabitAnalytics | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [loadingMonthChange, setLoadingMonthChange] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+    const [habitForm, setHabitForm] = useState({
+      name: '',
+      goal: 1,
+      icon: 'Target',
+      color: '#10b981'
+    });
+    const now = new Date();
+    const [selectedMonth, setSelectedMonth] = useState(now.getMonth()); // 0-11
+    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
   useEffect(() => {
     fetchHabits();
     fetchAnalytics();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   const fetchHabits = async () => {
     try {
-      const response = await fetch('/api/habit-grid');
+      const response = await fetch(`/api/habit-grid?month=${selectedMonth}&year=${selectedYear}`);
       if (response.ok) {
         const data = await response.json();
         setHabits(data);
@@ -119,7 +122,7 @@ export default function HabitGridPage() {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await fetch('/api/habit-analytics');
+      const response = await fetch(`/api/habit-analytics?month=${selectedMonth}&year=${selectedYear}`);
       if (response.ok) {
         const data = await response.json();
         setAnalytics(data);
@@ -202,7 +205,7 @@ export default function HabitGridPage() {
   const toggleCompletion = async (habitId: number, dayIndex: number) => {
     if (dayIndex >= daysInMonth) return; // Prevent clicking invalid days
 
-    const date = new Date(now.getFullYear(), now.getMonth(), dayIndex + 1);
+    const date = new Date(selectedYear, selectedMonth, dayIndex + 1);
     const dateStr = getLocalDateString(date);
     const completed = !habits.find(h => h.id === habitId)?.history[dayIndex];
 
@@ -267,6 +270,8 @@ export default function HabitGridPage() {
   const totalXP = habits.reduce((acc, habit) => acc + habit.history.filter(Boolean).length, 0) * 25;
   const currentLevel = Math.floor(totalXP / 500) + 1;
   const progressToNext = ((totalXP % 500) / 500) * 100;
+
+  const habitGridClassName = `bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 ${loadingMonthChange ? 'opacity-50' : 'opacity-100'}`;
 
   if (loading) {
     return (
@@ -337,18 +342,43 @@ export default function HabitGridPage() {
           {/* Habit Matrix - Middle on Mobile */}
           <div className="order-2 lg:order-1 xl:col-span-4">
             {/* Habit Grid */}
-            <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300">
+            <div className={habitGridClassName}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white">Habit Matrix</h2>
-                {/* Desktop Add Button */}
-                <div className="hidden md:block">
-                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => openModal()} className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Habit
-                      </Button>
-                    </DialogTrigger>
+                <div className="flex items-center gap-4">
+                  {/* Month Navigation */}
+                  <Select value={`${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`} onValueChange={(value) => {
+                    setLoadingMonthChange(true);
+                    const [year, month] = value.split('-').map(Number);
+                    setSelectedYear(year);
+                    setSelectedMonth(month - 1);
+                    // The useEffect will trigger fetchHabits and fetchAnalytics
+                    // We can set loadingMonthChange to false after a short delay for smooth transition
+                    setTimeout(() => setLoadingMonthChange(false), 300);
+                  }}>
+                    <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600">
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = new Date(selectedYear, i);
+                        return (
+                          <SelectItem key={i} value={`${selectedYear}-${String(i + 1).padStart(2, '0')}`} className="text-white">
+                            {month.toLocaleString('default', { month: 'long' })} {selectedYear}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {/* Desktop Add Button */}
+                  <div className="hidden md:block">
+                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button onClick={() => openModal()} className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Habit
+                        </Button>
+                      </DialogTrigger>
                     <DialogContent className="bg-gray-900 border-white/10">
                       <DialogHeader>
                         <DialogTitle className="text-white">{editingHabit ? 'Edit Habit' : 'Create New Habit'}</DialogTitle>
@@ -419,6 +449,7 @@ export default function HabitGridPage() {
                     </DialogContent>
                   </Dialog>
                 </div>
+              </div>
               </div>
 
               {/* Mobile View (5x6 Matrix) */}

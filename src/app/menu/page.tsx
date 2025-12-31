@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, Code, GraduationCap, Wallet, Dumbbell, BarChart3, Settings, CheckSquare, RotateCcw, ArrowLeft } from 'lucide-react';
+import { Home, Code, GraduationCap, Wallet, Dumbbell, BarChart3, Settings, CheckSquare, RotateCcw, ArrowLeft, Bot } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FadeIn, StaggeredContainer } from '@/components/ui/animations';
@@ -15,6 +15,7 @@ const navigation = [
   { name: 'Gym', href: '/gym', icon: Dumbbell, description: 'Workout Tracking' },
   { name: 'Wallet', href: '/wallet', icon: Wallet, description: 'Expense Management' },
   { name: 'Health', href: '/health', icon: Dumbbell, description: 'Daily Health Log' },
+  { name: 'AI Agent', href: '/ai-agent', icon: Bot, description: 'Smart Productivity Companion' },
   { name: 'Progress', href: '/progress', icon: BarChart3, description: 'Analytics & Insights' },
   { name: 'Reset', href: '/reset', icon: RotateCcw, description: 'Data Management' },
 ];

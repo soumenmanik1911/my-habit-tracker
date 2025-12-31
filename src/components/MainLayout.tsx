@@ -8,6 +8,7 @@ import { ThemeToggleFixed } from './ui/theme-toggle';
 import { useTheme } from './ui/theme-provider';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { GlobalAIAgent } from './GlobalAIAgent';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -56,6 +57,7 @@ export function MainLayout({ children, showSidebar = true, showHeader = true, on
           <Footer />
         </main>
       </div>
+      <GlobalAIAgent />
     </div>
   );
 }

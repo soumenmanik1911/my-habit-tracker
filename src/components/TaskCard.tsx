@@ -16,6 +16,8 @@ interface Task {
   is_completed: boolean;
   category: 'Academic' | 'Personal' | 'Exam' | 'Project';
   created_at: Date;
+  is_ai_task?: boolean; // Legacy flag for backward compatibility
+  source?: 'AI' | 'MANUAL'; // Source flag to identify task origin
 }
 
 interface TaskCardProps {
@@ -45,7 +47,9 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
   const handleToggle = () => {
     startTransition(async () => {
       try {
-        const result = await toggleTask(task.id);
+        // Use source flag for backward compatibility
+        const isAITask = task.source === 'AI' || task.is_ai_task;
+        const result = await toggleTask(task.id, isAITask);
         if (result.success) {
           onRefresh();
         } else {
@@ -63,7 +67,9 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
       setIsDeleting(true);
       startTransition(async () => {
         try {
-          const result = await deleteTask(task.id);
+          // Use source flag for backward compatibility
+          const isAITask = task.source === 'AI' || task.is_ai_task;
+          const result = await deleteTask(task.id, isAITask);
           if (result.success) {
             onRefresh();
           } else {
@@ -122,12 +128,19 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
           {/* Task Details Container */}
           <div className="flex-1 min-w-0">
             {/* Task Title */}
-            <h3 className={cn(
-              'font-semibold text-sm sm:text-base text-white leading-tight mb-1 truncate',
-              task.is_completed && 'line-through text-gray-400'
-            )}>
-              {task.title}
-            </h3>
+             <div className="flex items-center space-x-2">
+               <h3 className={cn(
+                 'font-semibold text-sm sm:text-base text-white leading-tight mb-1 truncate',
+                 task.is_completed && 'line-through text-gray-400'
+               )}>
+                 {task.title}
+               </h3>
+               {task.source === 'AI' && (
+                 <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
+                   AI
+                 </span>
+               )}
+             </div>
 
             {/* Metadata Row - Due Date, Priority Badge, Category Tag */}
             <div className="flex items-center space-x-2 flex-wrap">
@@ -157,18 +170,20 @@ export function TaskCard({ task, onEdit, onRefresh }: TaskCardProps) {
 
         {/* Right Side - Action Area */}
         <div className="flex items-center space-x-1 shrink-0 ml-2">
-          {/* Edit Icon Button */}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onEdit(task)}
-            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md touch-manipulation"
-            title="Edit task"
-          >
-            <Edit size={14} />
-          </Button>
+          {/* Edit Icon Button - Only show for non-AI tasks */}
+          {task.source !== 'AI' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onEdit(task)}
+              className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md touch-manipulation"
+              title="Edit task"
+            >
+              <Edit size={14} />
+            </Button>
+          )}
 
-          {/* Delete Icon Button */}
+          {/* Delete Icon Button - Show for all tasks */}
           <Button
             size="sm"
             variant="ghost"

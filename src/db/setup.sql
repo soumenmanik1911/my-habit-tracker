@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS Expenses;
 DROP TABLE IF EXISTS HealthTracker;
 DROP TABLE IF EXISTS GymAttendance;
 DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS ai_tasks;
 DROP TABLE IF EXISTS UserSettings;
 DROP TABLE IF EXISTS HabitStreaks;
 DROP TABLE IF EXISTS DailyStats;
@@ -86,6 +87,16 @@ CREATE TABLE tasks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE ai_tasks (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    date DATE NOT NULL,
+    time TEXT,
+    is_completed BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 CREATE INDEX idx_tasks_is_completed ON tasks(is_completed);
 CREATE INDEX idx_tasks_category ON tasks(category);
@@ -138,6 +149,8 @@ CREATE TABLE DailyStats (
     UNIQUE(user_id, date)
 );
 
+
+
 -- Habit Grid Tables
 CREATE TABLE Habits (
     id SERIAL PRIMARY KEY,
@@ -160,7 +173,28 @@ CREATE TABLE HabitLogs (
     UNIQUE(habit_id, date)
 );
 
+
+
 CREATE INDEX idx_habit_logs_habit_id ON HabitLogs(habit_id);
 CREATE INDEX idx_habit_logs_date ON HabitLogs(date);
+
+-- Intelligent Glass Notebook Tables
+CREATE TABLE notes (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    tags TEXT[] DEFAULT '{}',
+    is_pinned BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_notes_user_id ON notes(user_id);
+CREATE INDEX idx_notes_created_at ON notes(created_at);
+CREATE INDEX idx_notes_is_pinned ON notes(is_pinned);
+CREATE INDEX idx_notes_tags ON notes USING GIN(tags);
+
+
 
 -- Note: No initial inserts for UserSettings and HabitStreaks as they are now per-user

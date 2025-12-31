@@ -18,6 +18,8 @@ interface Task {
   is_completed: boolean;
   category: 'Academic' | 'Personal' | 'Exam' | 'Project';
   created_at: Date;
+  is_ai_task?: boolean; // Legacy flag for backward compatibility
+  source?: 'AI' | 'MANUAL'; // Source flag to identify task origin
 }
 
 interface TaskDrawerProps {
@@ -85,6 +87,17 @@ export function TaskDrawer({ task, open, onOpenChange, onRefresh }: TaskDrawerPr
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
+          {/* AI Task Indicator */}
+          {editedTask.source === 'AI' && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-3 text-center">
+              <p className="text-blue-400 text-sm font-medium">
+                <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-2"></span>
+                AI-Generated Task
+              </p>
+              <p className="text-blue-300 text-xs mt-1">This task was created by your AI assistant</p>
+            </div>
+          )}
+
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -95,7 +108,7 @@ export function TaskDrawer({ task, open, onOpenChange, onRefresh }: TaskDrawerPr
               onChange={(e) => setEditedTask(prev => prev ? { ...prev, title: e.target.value } : null)}
               onBlur={(e) => handleSave('title', e.target.value)}
               className="bg-gray-800 border-gray-700 text-white"
-              disabled={isPending}
+              disabled={isPending || editedTask.source === 'AI'}
             />
           </div>
 
@@ -110,7 +123,7 @@ export function TaskDrawer({ task, open, onOpenChange, onRefresh }: TaskDrawerPr
               onBlur={(e: React.FocusEvent<HTMLTextAreaElement>) => handleSave('description', e.target.value)}
               placeholder="Add notes about this task..."
               className="w-full bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-2 min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isPending}
+              disabled={isPending || editedTask.source === 'AI'}
             />
           </div>
 
@@ -125,7 +138,7 @@ export function TaskDrawer({ task, open, onOpenChange, onRefresh }: TaskDrawerPr
                 value={editedTask.due_date ? new Date(editedTask.due_date).toISOString().slice(0, 16) : ''}
                 onChange={(e) => handleDateChange(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white pl-10"
-                disabled={isPending}
+                disabled={isPending || editedTask.source === 'AI'}
               />
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
             </div>
@@ -136,20 +149,26 @@ export function TaskDrawer({ task, open, onOpenChange, onRefresh }: TaskDrawerPr
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Priority
             </label>
-            <Select
-              value={editedTask.priority}
-              onValueChange={handlePriorityChange}
-            >
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="Low" className="text-green-400">Low</SelectItem>
-                <SelectItem value="Medium" className="text-yellow-400">Medium</SelectItem>
-                <SelectItem value="High" className="text-orange-400">High</SelectItem>
-                <SelectItem value="Critical" className="text-red-400">Critical</SelectItem>
-              </SelectContent>
-            </Select>
+            {editedTask.is_ai_task ? (
+              <div className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-2 h-10 flex items-center">
+                {editedTask.priority}
+              </div>
+            ) : (
+              <Select
+                value={editedTask.priority}
+                onValueChange={handlePriorityChange}
+              >
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="Low" className="text-green-400">Low</SelectItem>
+                  <SelectItem value="Medium" className="text-yellow-400">Medium</SelectItem>
+                  <SelectItem value="High" className="text-orange-400">High</SelectItem>
+                  <SelectItem value="Critical" className="text-red-400">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Category */}
@@ -157,20 +176,26 @@ export function TaskDrawer({ task, open, onOpenChange, onRefresh }: TaskDrawerPr
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Category
             </label>
-            <Select
-              value={editedTask.category}
-              onValueChange={handleCategoryChange}
-            >
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="Academic">Academic</SelectItem>
-                <SelectItem value="Personal">Personal</SelectItem>
-                <SelectItem value="Exam">Exam</SelectItem>
-                <SelectItem value="Project">Project</SelectItem>
-              </SelectContent>
-            </Select>
+            {editedTask.is_ai_task ? (
+              <div className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-2 h-10 flex items-center">
+                {editedTask.category}
+              </div>
+            ) : (
+              <Select
+                value={editedTask.category}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="Academic">Academic</SelectItem>
+                  <SelectItem value="Personal">Personal</SelectItem>
+                  <SelectItem value="Exam">Exam</SelectItem>
+                  <SelectItem value="Project">Project</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Task Info */}

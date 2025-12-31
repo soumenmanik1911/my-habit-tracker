@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Code, GraduationCap, Wallet, Dumbbell, BarChart3, Settings, CheckSquare, RotateCcw, TrendingUp, Target } from 'lucide-react';
+import { Home, Code, GraduationCap, Wallet, Dumbbell, BarChart3, Settings, CheckSquare, RotateCcw, TrendingUp, Target, Bot, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FadeIn, StaggeredContainer } from './ui/animations';
 import { ThemeToggle } from './ui/theme-toggle';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Notebook', href: '/notes', icon: FileText, highlight: true },
   { name: 'DSA', href: '/dsa', icon: Code },
   { name: 'College', href: '/college', icon: GraduationCap },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
@@ -17,6 +18,7 @@ const navigation = [
   { name: 'Health', href: '/health', icon: Dumbbell },
   { name: 'Habit Grid', href: '/habit-grid', icon: Target },
   { name: 'Progress', href: '/progress', icon: BarChart3 },
+  { name: 'AI Agent', href: '/ai-agent', icon: Bot },
   { name: 'Reset', href: '/reset', icon: RotateCcw },
 ];
 
@@ -57,6 +59,7 @@ export function Sidebar({ isOpen, onToggle, onClose }: { isOpen?: boolean; onTog
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
+                const isHighlighted = item.highlight;
                 return (
                   <Link
                     key={item.name}
@@ -66,23 +69,44 @@ export function Sidebar({ isOpen, onToggle, onClose }: { isOpen?: boolean; onTog
                       'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 relative overflow-hidden',
                       isActive
                         ? 'bg-gradient-to-r from-cyan-600/90 via-blue-600/90 to-purple-600/90 text-white shadow-lg shadow-cyan-500/25 border border-cyan-500/30'
+                        : isHighlighted
+                        ? 'bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/40 hover:to-blue-600/40 hover:text-white hover:shadow-lg hover:shadow-purple-500/25 border border-purple-500/30'
                         : 'text-gray-300 hover:bg-gray-700/50 hover:text-white hover:shadow-md'
                     )}
                   >
-                    {isActive && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 animate-pulse" />
+                    {(isActive || isHighlighted) && (
+                      <div className={cn(
+                        'absolute inset-0 animate-pulse',
+                        isActive 
+                          ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20' 
+                          : 'bg-gradient-to-r from-purple-500/20 to-blue-500/20'
+                      )} />
                     )}
                     <div className={cn(
                       'relative mr-3 h-5 w-5 flex-shrink-0 rounded-md flex items-center justify-center transition-all duration-300',
                       isActive
                         ? 'bg-white/20 shadow-inner'
+                        : isHighlighted
+                        ? 'bg-purple-500/60 group-hover:bg-purple-400/80 group-hover:shadow-lg group-hover:shadow-purple-500/25'
                         : 'bg-gray-600/60 group-hover:bg-cyan-500/60 group-hover:shadow-lg group-hover:shadow-cyan-500/25'
                     )}>
-                      <Icon size={14} className={isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'} />
+                      <Icon size={14} className={cn(
+                        isActive ? 'text-white' : isHighlighted ? 'text-purple-100 group-hover:text-white' : 'text-gray-300 group-hover:text-white'
+                      )} />
                     </div>
-                    <span className="relative flex-1 font-medium text-sm">{item.name}</span>
+                    <span className="relative flex-1 font-medium text-sm flex items-center">
+                      {item.name}
+                      {isHighlighted && (
+                        <span className="ml-2 px-1.5 py-0.5 text-xs bg-purple-500/30 text-purple-200 rounded-full font-semibold">
+                          ✨ NEW
+                        </span>
+                      )}
+                    </span>
                     {isActive && (
                       <div className="relative w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-sm shadow-cyan-400/50" />
+                    )}
+                    {isHighlighted && !isActive && (
+                      <div className="relative w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse shadow-sm shadow-purple-400/50" />
                     )}
                   </Link>
                 );

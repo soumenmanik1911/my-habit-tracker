@@ -97,97 +97,82 @@ const DashboardOverview = ({ data, dsaProblems, recentTransactions }: {
     <StreakDisplay />
 
     {/* Bento Grid Layout */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
-      {/* Row 1: Quick Stats */}
-      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
+    <div className="grid grid-cols-4 gap-4 auto-rows-[minmax(140px,auto)] max-lg:flex max-lg:flex-col max-lg:gap-4">
+      {/* Top Row: Quick Stats */}
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">🧠</div>
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-emerald-400" style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>{data?.totalSolved || 0}</div>
-          <div className="text-zinc-400 text-sm">Total DSA</div>
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1">DSA STATUS</div>
+          <div className="text-2xl font-bold text-emerald-400" style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>{data?.totalSolved || 0}</div>
+          <div className="text-zinc-400 text-xs">Total Solved</div>
         </CardContent>
       </Card>
 
-      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">💰</div>
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-rose-400" style={{ filter: 'drop-shadow(0 0 8px rgba(244,63,94,0.8))' }}>₹{(data?.totalDebt || 0).toFixed(0)}</div>
-          <div className="text-zinc-400 text-sm">Total Udhaar</div>
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1">FINANCE</div>
+          <div className="text-2xl font-bold text-rose-400" style={{ filter: 'drop-shadow(0 0 8px rgba(244,63,94,0.8))' }}>₹{(data?.totalDebt || 0).toFixed(0)}</div>
+          <div className="text-zinc-400 text-xs">Total Udhaar</div>
         </CardContent>
       </Card>
 
-      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">💪</div>
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-green-400" style={{ filter: 'drop-shadow(0 0 8px rgba(34,197,94,0.8))' }}>₹{(data?.totalExpense || 0).toFixed(0)}</div>
-          <div className="text-zinc-400 text-sm">Total Expense</div>
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1">GYM STATUS</div>
+          <div className="text-2xl font-bold text-green-400" style={{ filter: 'drop-shadow(0 0 8px rgba(34,197,94,0.8))' }}>{data?.gymStreak || 0}</div>
+          <div className="text-zinc-400 text-xs">Current Streak</div>
         </CardContent>
       </Card>
 
-      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">🎓</div>
         <CardContent className="p-4">
-          <div className="text-3xl font-bold text-blue-400" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.8))' }}>{data?.collegeAttendance?.presentDays || 0}</div>
-          <div className="text-zinc-400 text-sm">College Present</div>
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1">COLLEGE</div>
+          <div className="text-2xl font-bold text-blue-400" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.8))' }}>{data?.collegeAttendance?.presentDays || 0}</div>
+          <div className="text-zinc-400 text-xs">Days Present</div>
         </CardContent>
       </Card>
 
-      {/* Smoking Tracker - Full Width */}
-      <div className="col-span-1 sm:col-span-2 lg:col-span-4">
-        <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 p-4">
-          <SmokingTracker />
+      {/* Middle Row: Primary Widgets */}
+      <div className="col-span-2 row-span-2 bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">📊</div>
+        <div className="p-4">
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">PROBLEM DIFFICULTY</div>
+          <ProblemTypeOverview />
         </div>
       </div>
 
-      {/* Row 3: Finance & Activity */}
-      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 sm:col-span-2 lg:col-span-2">
-        <CardHeader className="border-b border-cyan-500/20">
-          <CardTitle className="text-white flex items-center gap-2">
-            <span className="text-rose-400">💰</span>
-            Finance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-4">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-2 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">💰</div>
+        <CardContent className="p-4">
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">FINANCE OVERVIEW</div>
           <FinanceCard />
         </CardContent>
       </Card>
 
-      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-1 sm:col-span-2 lg:col-span-2">
-        <CardHeader className="border-b border-cyan-500/20">
-          <CardTitle className="text-white flex items-center gap-2">
-            <span className="text-blue-400">📝</span>
-            Recent Activity
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-4">
-          <div className="space-y-4 sm:space-y-6">
+      <Card className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 col-span-2 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">📝</div>
+        <CardContent className="p-4">
+          <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">RECENT ACTIVITY</div>
+          <div className="space-y-3">
             {/* Recent DSA Problems */}
             {dsaProblems.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
-                  <span className="text-emerald-400">🧠</span>
-                  Recent DSA Problems
-                </h4>
-                <div className="space-y-2">
-                  {dsaProblems.slice(0, 3).map((problem) => (
-                    <div key={problem.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/30 hover:bg-zinc-800/70 transition-colors">
+                <div className="space-y-1">
+                  {dsaProblems.slice(0, 2).map((problem) => (
+                    <div key={problem.id} className="flex items-center justify-between p-2 bg-zinc-800/50 rounded border border-zinc-700/30">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-white truncate">{problem.problem_name}</div>
-                        <div className="text-xs text-zinc-400 flex items-center gap-2 mt-1">
-                          <span>{problem.platform}</span>
-                          <span>•</span>
-                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                            problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
-                            problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                            'bg-red-900/50 text-red-400'
-                          }`}>
-                            {problem.difficulty}
-                          </span>
-                        </div>
+                        <div className="text-xs font-medium text-white truncate">{problem.problem_name}</div>
+                        <div className="text-xs text-zinc-400">{problem.platform}</div>
                       </div>
-                      <div className="ml-2 flex-shrink-0">
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
-                          problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                          'bg-red-900/50 text-red-400'
-                        }`}>
-                          {problem.difficulty}
-                        </div>
+                      <div className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                        problem.difficulty === 'Easy' ? 'bg-green-900/50 text-green-400' :
+                        problem.difficulty === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' :
+                        'bg-red-900/50 text-red-400'
+                      }`}>
+                        {problem.difficulty}
                       </div>
                     </div>
                   ))}
@@ -198,30 +183,17 @@ const DashboardOverview = ({ data, dsaProblems, recentTransactions }: {
             {/* Recent Transactions */}
             {recentTransactions.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
-                  <span className="text-rose-400">💰</span>
-                  Recent Transactions
-                </h4>
-                <div className="space-y-2">
-                  {recentTransactions.slice(0, 2).map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/30 hover:bg-zinc-800/70 transition-colors">
+                <div className="space-y-1">
+                  {recentTransactions.slice(0, 1).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-2 bg-zinc-800/50 rounded border border-zinc-700/30">
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-white">₹{transaction.amount.toFixed(2)}</div>
-                        <div className="text-xs text-zinc-400 flex items-center gap-2 mt-1">
-                          <span>{transaction.category}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                            transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
-                          }`}>
-                            {transaction.is_debt ? 'Udhaar' : 'Expense'}
-                          </span>
-                        </div>
+                        <div className="text-xs font-medium text-white">₹{transaction.amount.toFixed(2)}</div>
+                        <div className="text-xs text-zinc-400">{transaction.category}</div>
                       </div>
-                      <div className="ml-2 flex-shrink-0">
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
-                        }`}>
-                          {transaction.is_debt ? 'Udhaar' : 'Expense'}
-                        </div>
+                      <div className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                        transaction.is_debt ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-400'
+                      }`}>
+                        {transaction.is_debt ? 'Udhaar' : 'Expense'}
                       </div>
                     </div>
                   ))}
@@ -230,15 +202,21 @@ const DashboardOverview = ({ data, dsaProblems, recentTransactions }: {
             )}
 
             {dsaProblems.length === 0 && recentTransactions.length === 0 && (
-              <div className="text-center text-zinc-500 py-8 sm:py-12">
-                <div className="text-4xl mb-4">📭</div>
-                <div className="text-sm sm:text-base">No recent activity</div>
-                <div className="text-xs text-zinc-600 mt-2">Start tracking your progress!</div>
+              <div className="text-center text-zinc-500 py-4">
+                <div className="text-2xl mb-2">📭</div>
+                <div className="text-xs">No recent activity</div>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Bottom Row: Smoking Tracker */}
+      <div className="col-span-4 bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-xl hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 p-4 relative">
+        <div className="absolute top-2 right-2 text-cyan-400">🚬</div>
+        <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">SMOKING TRACKER</div>
+        <SmokingTracker />
+      </div>
     </div>
   </>
 );
@@ -1016,7 +994,7 @@ export default function Dashboard() {
                 🔥 Habit Tracker
               </Button>
             </div>
-
+ 
             {/* Conditional Rendering */}
             {activeTab === 'overview' && <DashboardOverview data={data} dsaProblems={dsaProblems} recentTransactions={recentTransactions} />}
 

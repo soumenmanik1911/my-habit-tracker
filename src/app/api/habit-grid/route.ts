@@ -2,20 +2,24 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { getHabits, createHabit, updateHabit, deleteHabit } from '@/lib/data-fetching';
 
-export async function GET() {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(request: Request) {
+   try {
+     const { userId } = await auth();
+     if (!userId) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
 
-    const habits = await getHabits(userId);
-    return NextResponse.json(habits);
-  } catch (error) {
-    console.error('Error fetching habits:', error);
-    return NextResponse.json({ error: 'Failed to fetch habits' }, { status: 500 });
-  }
-}
+     const { searchParams } = new URL(request.url);
+     const month = searchParams.get('month') ? parseInt(searchParams.get('month')!) : null;
+     const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : null;
+
+     const habits = await getHabits(userId, month, year);
+     return NextResponse.json(habits);
+   } catch (error) {
+     console.error('Error fetching habits:', error);
+     return NextResponse.json({ error: 'Failed to fetch habits' }, { status: 500 });
+   }
+ }
 
 export async function POST(request: Request) {
   try {

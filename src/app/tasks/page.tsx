@@ -21,6 +21,8 @@ interface Task {
   is_completed: boolean;
   category: 'Academic' | 'Personal' | 'Exam' | 'Project';
   created_at: Date;
+  is_ai_task?: boolean; // Legacy flag for backward compatibility
+  source?: 'AI' | 'MANUAL'; // Source flag to identify task origin
 }
 
 export default function TasksPage() {
